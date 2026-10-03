@@ -51,7 +51,7 @@
     }
     .btn-neon:active { transform: scale(0.92); box-shadow: 0 0 10px rgba(14, 165, 233, 0.9); }
 
-    /* Numbers & Popups */
+    /* Flash Numbers & Feedback */
     .flash-num {
       font-size: 6.2rem; color: #fff; font-weight: 900; line-height: 1;
       text-shadow: 0 0 20px #0ea5e9, 0 0 40px #0ea5e9, 0 0 80px #6366f1;
@@ -70,11 +70,18 @@
       animation: slamText 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
     }
     .nitro-text {
-      font-size: 2.6rem; line-height: 1;
+      font-size: 2.5rem; line-height: 1;
       background: linear-gradient(to bottom, #fff, #38bdf8, #818cf8);
       -webkit-background-clip: text; color: transparent;
       filter: drop-shadow(0 0 15px #38bdf8) drop-shadow(0 0 35px #6366f1);
       animation: slamText 0.22s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+    .warp-banner {
+      font-size: 2.2rem; line-height: 1.1;
+      background: linear-gradient(to bottom, #fff, #f472b6, #c084fc);
+      -webkit-background-clip: text; color: transparent;
+      filter: drop-shadow(0 0 15px #f472b6) drop-shadow(0 0 40px #c084fc);
+      animation: slamText 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
     }
     @keyframes slamText {
       0% { transform: scale(3) rotate(10deg); opacity: 0; }
@@ -125,7 +132,7 @@
 
     <!-- Title Section -->
     <div class="relative z-10 text-center my-auto py-1">
-      <div class="text-[9px] sm:text-[10px] text-pink-400 tracking-[0.4em] uppercase mb-1">REAL-TIME 4-CRAFT GRAND PRIX</div>
+      <div class="text-[9px] sm:text-[10px] text-pink-400 tracking-[0.4em] uppercase mb-1">3 DYNAMIC ZONES // 4-CRAFT GRAND PRIX</div>
       <h1 class="text-3xl sm:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-500 to-pink-500 drop-shadow-[0_0_15px_rgba(236,72,153,0.8)] italic leading-tight">
         ANZAN<br>GRAND PRIX
       </h1>
@@ -304,7 +311,7 @@
     </button>
   </div>
 
-  <!-- ==================== GAME SCREEN: HIGH-FIDELITY F-ZERO CURVED CIRCUIT ==================== -->
+  <!-- ==================== GAME SCREEN: 3 DYNAMIC ZONES & DASH PLATES ==================== -->
   <div id="gameScreen" class="absolute inset-0 z-0 hidden-force flex flex-col justify-between overflow-hidden">
     
     <!-- TOP SECTION: HUD & FLASH NUMBERS -->
@@ -322,13 +329,16 @@
           </div>
         </div>
         
-        <!-- Center: Lap + Live Position (1st - 4th) -->
-        <div class="flex items-center gap-2">
-          <div class="glass-panel px-3 py-1 rounded-full border-pink-500/80 shadow-[0_0_12px_rgba(236,72,153,0.5)]">
-            <span id="progressText" class="text-pink-400 font-black text-xs tracking-widest">LAP 1 / 10</span>
+        <!-- Center: Lap + Live Position + Zone Badge -->
+        <div class="flex items-center gap-1.5">
+          <div class="glass-panel px-2.5 py-1 rounded-full border-pink-500/80 shadow-[0_0_12px_rgba(236,72,153,0.5)]">
+            <span id="progressText" class="text-pink-400 font-black text-xs tracking-widest">LAP 1/10</span>
           </div>
-          <div id="livePositionBadge" class="glass-panel px-3 py-1 rounded-full border-yellow-400 text-yellow-400 font-black text-xs tracking-wider shadow-[0_0_10px_#eab308]">
+          <div id="livePositionBadge" class="glass-panel px-2.5 py-1 rounded-full border-yellow-400 text-yellow-400 font-black text-xs tracking-wider shadow-[0_0_10px_#eab308]">
             POS: 2ND
+          </div>
+          <div id="zoneBadge" class="glass-panel px-2 py-0.5 rounded-lg border-cyan-400 text-cyan-300 font-bold text-[9px] tracking-wider">
+            ZONE 1
           </div>
         </div>
 
@@ -347,7 +357,7 @@
       </div>
     </div>
 
-    <!-- MIDDLE SECTION: 4-LANE CURVED RACE CANVAS -->
+    <!-- MIDDLE SECTION: 4-LANE DYNAMIC ENVIRONMENT CANVAS -->
     <div class="relative w-full flex-grow flex items-center justify-center overflow-hidden my-0.5">
       <canvas id="raceCanvas" class="w-full h-full block"></canvas>
       
@@ -433,6 +443,11 @@
     playOscillator(600, 'sawtooth', 0.35, 0.4);
     setTimeout(() => playOscillator(1200, 'square', 0.25, 0.3), 100);
   }
+  function playDashPlateSound() {
+    initAudio(); playKick();
+    playOscillator(480, 'sine', 0.15, 0.3);
+    setTimeout(() => playOscillator(960, 'triangle', 0.25, 0.4), 60);
+  }
   function playTap() { initAudio(); playOscillator(1200, 'sine', 0.04, 0.04); vibrate([15]); }
   function playCorrect(comboCount) {
     initAudio(); playKick();
@@ -468,6 +483,45 @@
   CRAFT_SPRITES.red.src = 'fzero_topdown_red_1791068105117.jpg';
   CRAFT_SPRITES.yellow.src = 'fzero_topdown_yellow_1791068124260.jpg';
   CRAFT_SPRITES.green.src = 'fzero_topdown_green_1791068143222.jpg';
+
+  // ==================== 3 DYNAMIC STAGES // F-ZERO THEMES ====================
+  const STAGES = [
+    {
+      id: 1,
+      name: "NEO TOKYO CIRCUIT",
+      subtitle: "ZONE 1 // NIGHT MEGACITY",
+      skyTop: "#020617", skyMid: "#091230", skyBottom: "#1e1b4b",
+      roadLight: "#0c1329", roadDark: "#070b18",
+      curb1: "#ec4899", curb2: "#06b6d4",
+      laneColor: "rgba(56, 189, 248, 0.45)",
+      ambientColor: "#38bdf8",
+      pillarColor: "#0ea5e9"
+    },
+    {
+      id: 2,
+      name: "SOLAR MAGMA CORRIDOR",
+      subtitle: "ZONE 2 // GEOTHERMAL CANYON",
+      skyTop: "#1c0505", skyMid: "#3f0a0a", skyBottom: "#5b1509",
+      roadLight: "#1f0d09", roadDark: "#130604",
+      curb1: "#f97316", curb2: "#ef4444",
+      laneColor: "rgba(251, 146, 60, 0.55)",
+      ambientColor: "#f97316",
+      pillarColor: "#eab308"
+    },
+    {
+      id: 3,
+      name: "DEEP SPACE HYPERWAY",
+      subtitle: "ZONE 3 // COSMIC WARP SPEED",
+      skyTop: "#050117", skyMid: "#190538", skyBottom: "#35095e",
+      roadLight: "#13092b", roadDark: "#0b051c",
+      curb1: "#a855f7", curb2: "#ec4899",
+      laneColor: "rgba(236, 72, 153, 0.65)",
+      ambientColor: "#c084fc",
+      pillarColor: "#f472b6"
+    }
+  ];
+
+  let currentStageIndex = 0;
 
   // ==================== RULES & MACHINES ====================
   const kyuData = [
@@ -527,6 +581,7 @@
   const feedbackEl = document.getElementById('feedback');
   const speedEl = document.getElementById('speed');
   const progressText = document.getElementById('progressText');
+  const zoneBadge = document.getElementById('zoneBadge');
   const autoPlayToggle = document.getElementById('autoPlayToggle');
   const autoPlayIndicator = document.getElementById('autoPlayIndicator');
   const goBtn = document.getElementById('goBtn');
@@ -544,15 +599,26 @@
   const totalProblems = 10;
   let combo = 0;
 
-  // ==================== PHYSICS & REAL RACER ENGINE ====================
+  // ==================== PHYSICS & 4-LANE STAGE ENGINE ====================
   const canvas = document.getElementById('raceCanvas');
   const ctx = canvas.getContext('2d');
   let trackDistance = 0;
   let currentCurve = 0;
   let targetCurve = 0;
   let particles = [];
+  let stars = [];
+  let dashPlates = [];
 
-  // 4 Racers with realistic continuous velocity physics (NO TELEPORTATION)
+  function initStarfield() {
+    stars = Array.from({length: 60}, () => ({
+      x: (Math.random() - 0.5) * 500,
+      y: Math.random() * 120,
+      z: Math.random() * 800 + 100
+    }));
+  }
+  initStarfield();
+
+  // 4 Racers
   const racers = [
     {
       id: 'player', name: 'YOU', isPlayer: true,
@@ -565,7 +631,6 @@
       dist: 35, speed: 110, boostVel: 0,
       lane: 2, targetLane: 2, bank: 0,
       spriteKey: 'red', flameColor: '#f97316',
-      // CP AI Personality: Aggressive, High speed, prone to risky blunders
       baseSpeed: 105, thinkTimer: 80, missRate: 0.16, statusText: '', statusTimer: 0
     },
     {
@@ -573,7 +638,6 @@
       dist: 22, speed: 95, boostVel: 0,
       lane: 0, targetLane: 0, bank: 0,
       spriteKey: 'yellow', flameColor: '#facc15',
-      // CP AI Personality: Very consistent, steady lane changes
       baseSpeed: 96, thinkTimer: 110, missRate: 0.06, statusText: '', statusTimer: 0
     },
     {
@@ -581,7 +645,6 @@
       dist: 12, speed: 85, boostVel: 0,
       lane: 3, targetLane: 3, bank: 0,
       spriteKey: 'green', flameColor: '#10b981',
-      // CP AI Personality: Sporadic wild nitro bursts
       baseSpeed: 88, thinkTimer: 95, missRate: 0.12, statusText: '', statusTimer: 0
     }
   ];
@@ -593,6 +656,18 @@
   }
   window.addEventListener('resize', resizeCanvas);
 
+  // Generate Dash Plates on track
+  function initDashPlates() {
+    dashPlates = [];
+    for (let d = 40; d < 1200; d += 65) {
+      dashPlates.push({
+        dist: d,
+        lane: Math.floor(Math.random() * 4), // lane 0, 1, 2, or 3
+        hitByPlayer: false
+      });
+    }
+  }
+
   function drawCurvedTrack() {
     if (!isPlaying) return;
     const w = canvas.width;
@@ -601,26 +676,41 @@
 
     ctx.clearRect(0, 0, w, h);
 
+    const st = STAGES[currentStageIndex];
+
     // Track progression & dynamic curve geometry
     trackDistance += speed * 0.055;
-    targetCurve = Math.sin(trackDistance * 0.003) * 125 + Math.sin(trackDistance * 0.0012) * 80;
+    targetCurve = Math.sin(trackDistance * 0.003) * 130 + Math.sin(trackDistance * 0.0012) * 85;
     currentCurve += (targetCurve - currentCurve) * 0.05;
 
-    const horizonY = 10;
+    const horizonY = 12;
     const bottomY = h;
     const topRoadW = w * 0.40;
     const bottomRoadW = w * 0.90;
 
-    // Background Sky Gradient
+    // Background Sky Gradient (Dynamic based on Current Stage)
     const bgGrad = ctx.createLinearGradient(0, 0, 0, h);
-    bgGrad.addColorStop(0, '#020617');
-    bgGrad.addColorStop(0.45, '#070c1e');
-    bgGrad.addColorStop(1, '#020617');
+    bgGrad.addColorStop(0, st.skyTop);
+    bgGrad.addColorStop(0.40, st.skyMid);
+    bgGrad.addColorStop(1, st.skyBottom);
     ctx.fillStyle = bgGrad;
     ctx.fillRect(0, 0, w, h);
 
+    // Parallax Starfield / Space Dust
+    ctx.fillStyle = '#fff';
+    stars.forEach(s => {
+      s.y += (speed / 300);
+      if (s.y > horizonY + 25) s.y = 0;
+      const px = w / 2 + s.x + currentCurve * 0.2;
+      const py = s.y;
+      if (px >= 0 && px <= w && py >= 0 && py <= h) {
+        ctx.fillStyle = st.ambientColor;
+        ctx.fillRect(px, py, 1.5, 1.5);
+      }
+    });
+
     // Draw Curved Road Slices
-    const slices = 32;
+    const slices = 34;
     const sliceH = (bottomY - horizonY) / slices;
 
     for (let i = slices; i >= 0; i--) {
@@ -638,8 +728,8 @@
       const cx1 = w / 2 + curveOff1;
       const cx2 = w / 2 + curveOff2;
 
-      // Road Surface
-      ctx.fillStyle = (i % 2 === 0) ? '#0b1329' : '#080e1e';
+      // Road Surface (Stage Theme Colors)
+      ctx.fillStyle = (i % 2 === 0) ? st.roadLight : st.roadDark;
       ctx.beginPath();
       ctx.moveTo(cx1 - rw1 / 2, y1);
       ctx.lineTo(cx1 + rw1 / 2, y1);
@@ -648,8 +738,8 @@
       ctx.closePath();
       ctx.fill();
 
-      // Neon Track Rails / Curbs (Pink / Cyan)
-      const curbColor = (Math.floor(trackDistance * 0.12 + i) % 2 === 0) ? '#ec4899' : '#06b6d4';
+      // Neon Curbs (Pink / Cyan / Orange / Purple based on Stage)
+      const curbColor = (Math.floor(trackDistance * 0.14 + i) % 2 === 0) ? st.curb1 : st.curb2;
       ctx.fillStyle = curbColor;
       ctx.fillRect(cx1 - rw1 / 2 - 5, y1, 5, sliceH);
       ctx.fillRect(cx1 + rw1 / 2, y1, 5, sliceH);
@@ -657,38 +747,93 @@
       // 4 Lanes: 3 Glowing Dashed Interior Dividers
       const dashVisible = Math.floor(trackDistance * 0.18 + i) % 3 !== 0;
       if (dashVisible) {
-        ctx.fillStyle = 'rgba(56, 189, 248, 0.45)';
+        ctx.fillStyle = st.laneColor;
         for (let l = 1; l <= 3; l++) {
           const lx = (cx1 - rw1 / 2) + (rw1 / 4) * l;
           ctx.fillRect(lx - 1, y1, 2, sliceH);
         }
       }
+
+      // Cyber City Pillars / Canyon Arches on sides
+      if (i % 6 === 0) {
+        const pHeight = 22 * t1;
+        ctx.fillStyle = st.pillarColor;
+        ctx.fillRect(cx1 - rw1 / 2 - 12 * t1, y1 - pHeight, 3 * t1, pHeight);
+        ctx.fillRect(cx1 + rw1 / 2 + 9 * t1, y1 - pHeight, 3 * t1, pHeight);
+      }
     }
+
+    // ==================== DASH PLATES (F-ZERO ACCELERATION PADS) ====================
+    dashPlates.forEach(dp => {
+      const distDiff = dp.dist - racers[0].dist;
+      let t = 0.70 - (distDiff * 0.0055);
+      if (t >= 0.12 && t <= 0.95) {
+        const rw = topRoadW + (bottomRoadW - topRoadW) * Math.pow(t, 1.35);
+        const curveOff = (1 - t) * (1 - t) * currentCurve;
+        const cx = w / 2 + curveOff;
+        const cy = horizonY + (bottomY - horizonY) * t;
+
+        const laneW = rw / 4;
+        const plateX = (cx - rw / 2) + laneW * (dp.lane + 0.5);
+
+        // Draw Glowing Chevron Arrow Dash Pad (Yellow / Gold)
+        ctx.save();
+        ctx.translate(plateX, cy);
+        const pScale = (0.35 + t * 0.65);
+        ctx.scale(pScale, pScale);
+        ctx.fillStyle = '#fde047';
+        ctx.shadowColor = '#facc15';
+        ctx.shadowBlur = 15;
+        // Chevron shape
+        ctx.beginPath();
+        ctx.moveTo(0, -14);
+        ctx.lineTo(16, 4);
+        ctx.lineTo(10, 8);
+        ctx.lineTo(0, -2);
+        ctx.lineTo(-10, 8);
+        ctx.lineTo(-16, 4);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+
+        // Check Collision with Player & Rivals
+        racers.forEach(r => {
+          if (Math.abs(r.dist - dp.dist) < 3 && Math.abs(r.lane - dp.lane) < 0.45) {
+            r.boostVel += 400; // Trigger Dash Plate Boost!
+            if (r.isPlayer && !dp.hitByPlayer) {
+              dp.hitByPlayer = true;
+              playDashPlateSound();
+              screenFlash('rgba(250, 204, 21, 0.6)');
+              feedbackEl.innerHTML = '<div class="nitro-text italic" style="color:#fde047;">⚡ DASH PLATE! +400 KM/H</div>';
+              setTimeout(() => { if(feedbackEl.textContent.includes('DASH')) feedbackEl.innerHTML = ''; }, 700);
+            }
+          }
+        });
+      }
+    });
 
     // ==================== SIMULATE CP THINKING & MENTAL MATH ====================
     racers.forEach(r => {
       if (!r.isPlayer) {
         r.thinkTimer--;
         if (r.thinkTimer <= 0) {
-          // CP completes a math problem!
-          r.thinkTimer = Math.floor(Math.random() * 70) + 60; // Every 2.5 ~ 4.5s
+          r.thinkTimer = Math.floor(Math.random() * 65) + 55; // 2.5 ~ 4.0s
           const roll = Math.random();
           
           if (roll < r.missRate) {
-            // CP MISSED!
+            // CP MISSED
             r.statusText = '💥 MISS!';
             r.statusTimer = 45;
-            r.boostVel = -220; // decelerates!
-            // Spawn sparks
+            r.boostVel = -220;
             spawnSparks(r);
           } else if (roll < r.missRate + 0.28) {
-            // CP NITRO!
+            // CP NITRO
             r.statusText = '⚡ NITRO!';
             r.statusTimer = 40;
             r.boostVel = 480;
-            r.targetLane = Math.floor(Math.random() * 4); // aggressive overtake
+            r.targetLane = Math.floor(Math.random() * 4);
           } else {
-            // CP REGULAR BOOST!
+            // CP BOOST
             r.statusText = '▲ BOOST';
             r.statusTimer = 35;
             r.boostVel = 260;
@@ -697,9 +842,9 @@
         }
       }
 
-      // Smooth Velocity Physics (Continuous Acceleration, No Teleportation)
+      // Smooth Velocity Physics (Continuous Acceleration)
       r.speed += ( (r.isPlayer ? targetSpeed : r.baseSpeed) - r.speed ) * 0.08;
-      r.boostVel *= 0.94; // smooth exponential decay of boost velocity
+      r.boostVel *= 0.94;
       const effectiveSpeed = Math.max(30, r.speed + r.boostVel);
       r.dist += (effectiveSpeed / 2400);
 
@@ -711,23 +856,22 @@
       if (r.statusTimer > 0) r.statusTimer--;
     });
 
-    // Update Player Speed HUD
+    // Update Speedometer
     speedEl.textContent = Math.floor(racers[0].speed + racers[0].boostVel);
 
-    // Calculate Real-time Leaderboard
+    // Leaderboard
     const sorted = [...racers].sort((a,b) => b.dist - a.dist);
     const playerRank = sorted.findIndex(r => r.isPlayer) + 1;
     const rankLabels = ["1ST", "2ND", "3RD", "4TH"];
     livePositionBadge.textContent = `POS: ${rankLabels[playerRank - 1]}`;
-    if (playerRank === 1) livePositionBadge.className = 'glass-panel px-3 py-1 rounded-full border-yellow-400 text-yellow-400 font-black text-xs tracking-wider shadow-[0_0_12px_#eab308]';
-    else if (playerRank === 2) livePositionBadge.className = 'glass-panel px-3 py-1 rounded-full border-cyan-400 text-cyan-400 font-black text-xs tracking-wider';
-    else livePositionBadge.className = 'glass-panel px-3 py-1 rounded-full border-slate-500 text-slate-300 font-black text-xs tracking-wider';
+    if (playerRank === 1) livePositionBadge.className = 'glass-panel px-2.5 py-1 rounded-full border-yellow-400 text-yellow-400 font-black text-xs tracking-wider shadow-[0_0_12px_#eab308]';
+    else if (playerRank === 2) livePositionBadge.className = 'glass-panel px-2.5 py-1 rounded-full border-cyan-400 text-cyan-400 font-black text-xs tracking-wider';
+    else livePositionBadge.className = 'glass-panel px-2.5 py-1 rounded-full border-slate-500 text-slate-300 font-black text-xs tracking-wider';
 
     // Render Order (Back to Front)
     const renderOrder = [...racers].sort((a,b) => b.dist - a.dist);
 
     renderOrder.forEach(r => {
-      // Relative Y position smoothly calculated from continuous distance
       const distDiff = r.dist - racers[0].dist;
       let t = 0.70 - (distDiff * 0.0055);
       t = Math.max(0.12, Math.min(0.92, t));
@@ -744,13 +888,13 @@
       drawFZeroMachine(ctx, carX, cy, scale, r);
     });
 
-    // Draw active particle sparks
+    // Draw active sparks
     drawParticles(ctx);
 
     requestAnimationFrame(drawCurvedTrack);
   }
 
-  // Draw High-Fidelity F-Zero Machine using Real Top-Down 4K AI Sprites
+  // Draw 4K F-Zero Craft Sprite with Screen Blending & Glowing Flames
   function drawFZeroMachine(c, x, y, scale, racer) {
     c.save();
     c.translate(x, y);
@@ -759,13 +903,13 @@
     const sprite = CRAFT_SPRITES[racer.spriteKey];
     const isPlayer = racer.isPlayer;
 
-    // Glowing Optical Shadow & Ground Reflection
+    // Optical Ground Shadow
     c.fillStyle = 'rgba(0, 0, 0, 0.55)';
     c.beginPath();
     c.ellipse(0, 16 * scale, 36 * scale, 12 * scale, 0, 0, Math.PI * 2);
     c.fill();
 
-    // Twin Plasma Afterburner Thrusters
+    // Twin Plasma Afterburners
     const boostActive = racer.boostVel > 100;
     const flameH = (Math.random() * 20 + 25) * (boostActive ? 2.2 : 1.1) * scale;
     c.fillStyle = racer.flameColor;
@@ -788,10 +932,9 @@
     c.fill();
     c.shadowBlur = 0; // reset
 
-    // Draw the 4K AI-Generated F-ZERO Vehicle Sprite
+    // Draw 4K Sprite
     if (sprite.complete && sprite.naturalWidth > 0) {
       c.save();
-      // Screen composite mode turns the black background 100% transparent while creating vibrant metallic reflections!
       c.globalCompositeOperation = 'screen';
       const drawW = 95 * scale;
       const drawH = 95 * scale;
@@ -799,7 +942,7 @@
       c.restore();
     }
 
-    // Name Tag & Dynamic CP Math Status Cue
+    // Name Tag
     if (isPlayer) {
       c.fillStyle = '#38bdf8';
       c.font = `bold ${Math.max(9, Math.floor(10 * scale))}px Orbitron, sans-serif`;
@@ -812,7 +955,7 @@
       c.fillText(racer.name, 0, -48 * scale);
     }
 
-    // CP Status Bubble (e.g. ⚡NITRO!, 💥MISS!)
+    // CP Status Bubble
     if (racer.statusTimer > 0 && racer.statusText) {
       const isMiss = racer.statusText.includes('MISS');
       c.fillStyle = isMiss ? '#ef4444' : (racer.statusText.includes('NITRO') ? '#38bdf8' : '#facc15');
@@ -850,6 +993,24 @@
       c.fillRect(canvas.width / 2 + p.x, canvas.height * 0.65 + p.y, 3, 3);
     });
     particles = particles.filter(p => p.life > 0);
+  }
+
+  // ==================== STAGE MORPHING / TRANSITION ====================
+  function updateStageZone() {
+    let nextStage = 0;
+    if (currentProblem >= 4) nextStage = 1; // Magma Canyon
+    if (currentProblem >= 8) nextStage = 2; // Deep Space
+
+    if (nextStage !== currentStageIndex) {
+      currentStageIndex = nextStage;
+      const st = STAGES[currentStageIndex];
+      zoneBadge.textContent = `ZONE ${st.id}`;
+      screenFlash('rgba(255, 255, 255, 1)');
+      playNitroSound();
+
+      feedbackEl.innerHTML = `<div class="warp-banner italic">${st.name}<br><span class="text-xs text-white">${st.subtitle}</span></div>`;
+      setTimeout(() => { if (feedbackEl.textContent.includes('ZONE')) feedbackEl.innerHTML = ''; }, 1600);
+    }
   }
 
   // ==================== GARAGE & INVENTORY ====================
@@ -999,8 +1160,12 @@
     speed = 120; targetSpeed = 120; 
     currentProblem = 1; combo = 0;
     trackDistance = 0;
+    currentStageIndex = 0;
+    zoneBadge.textContent = "ZONE 1";
     
-    // Reset Racers positions
+    initDashPlates();
+
+    // Reset Racers
     racers[0].dist = 0; racers[0].boostVel = 0;
     racers[1].dist = 42; racers[1].boostVel = 0;
     racers[2].dist = 28; racers[2].boostVel = 0;
@@ -1098,6 +1263,7 @@
     inputArea.classList.add('hidden-force');
     feedbackEl.innerHTML = '';
     progressText.textContent = `LAP ${currentProblem} / ${totalProblems}`;
+    updateStageZone();
 
     numbers = []; expectedSum = 0;
     const { digits, kuchi } = activeRule;
@@ -1170,7 +1336,6 @@
     }, 40);
   }
 
-  // Smooth Acceleration upon Submitting Answer
   window.submitAnswer = () => {
     if (!playerInput) return;
     clearInterval(nitroTimerInterval);
@@ -1191,9 +1356,7 @@
         nitroTriggers++;
         playNitroSound();
         targetSpeed = Math.min(speed + (650 * currentMachine.nitroBonus), currentMachine.topSpeed);
-        // Smooth boost acceleration (No instantaneous jump!)
         racers[0].boostVel = 750 * currentMachine.nitroBonus;
-        // Overtake by switching lane
         racers[0].targetLane = (racers[0].targetLane + (Math.random() > 0.5 ? 1 : 3)) % 4;
         feedbackEl.innerHTML = `<div class="nitro-text italic">⚡ NITRO OVERTAKE!!</div>`;
       } else {
@@ -1234,7 +1397,7 @@
         screenFlash('rgba(239, 68, 68, 0.7)');
         feedbackEl.innerHTML = `<div class="text-3xl font-black text-red-500 drop-shadow-[0_0_20px_#ef4444] mt-2 italic">MISS<br><span class="text-lg text-white">Ans: ${expectedSum}</span></div>`;
         targetSpeed = Math.max(speed - 350, 100);
-        racers[0].boostVel = -280; // Player momentarily decelerates smoothly
+        racers[0].boostVel = -280;
         spawnSparks(racers[0]);
         
         setTimeout(() => {
