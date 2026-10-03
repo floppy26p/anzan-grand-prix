@@ -1,0 +1,1319 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Anzan Formula F-ZERO Grand Prix</title>
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
+    
+    html, body {
+      margin: 0; padding: 0; width: 100%; height: 100%; height: 100dvh;
+      overflow: hidden; background: #000;
+      display: flex; justify-content: center; align-items: center;
+      font-family: 'Orbitron', sans-serif;
+      touch-action: manipulation; overscroll-behavior: none;
+      -webkit-user-select: none; user-select: none;
+    }
+    
+    * {
+      scrollbar-width: none !important;
+      -ms-overflow-style: none !important;
+    }
+    *::-webkit-scrollbar {
+      display: none !important; width: 0 !important; height: 0 !important;
+    }
+
+    .mobile-frame {
+      width: 100%; max-width: 430px; height: 100%; height: 100dvh;
+      background: #020617; position: relative; overflow: hidden;
+      display: flex; flex-direction: column;
+    }
+
+    @media (min-width: 640px) {
+      .mobile-frame {
+        height: min(92dvh, 880px);
+        border-radius: 32px;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 1), inset 0 0 0 2px #1e293b;
+      }
+    }
+
+    /* --- High Quality Background Layers --- */
+    .bg-layer {
+      position: absolute; inset: 0; z-index: 0;
+      background-image: url('synthwave_fzero_track_1790737746140.jpg');
+      background-size: cover; background-position: center bottom;
+      filter: saturate(1.2) contrast(1.1);
+      transition: filter 0.3s;
+    }
+    
+    .chromatic-aberration { text-shadow: 4px 0 0 rgba(255,0,0,0.8), -4px 0 0 rgba(0,255,255,0.8); }
+
+    .glass-panel {
+      background: rgba(15, 23, 42, 0.82); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(56, 189, 248, 0.3); box-shadow: 0 4px 30px rgba(0, 0, 0, 0.8);
+    }
+
+    .btn-neon {
+      background: linear-gradient(135deg, #0ea5e9, #6366f1);
+      box-shadow: 0 0 20px rgba(14, 165, 233, 0.7), inset 0 0 10px rgba(255,255,255,0.4);
+      border: 1px solid #bae6fd; transition: transform 0.1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .btn-neon:active { transform: scale(0.92); box-shadow: 0 0 10px rgba(14, 165, 233, 0.9); }
+
+    #starfield { position: absolute; inset: 0; z-index: 1; mix-blend-mode: screen; opacity: 0.85; }
+
+    .speed-lines {
+      position: absolute; inset: 0; pointer-events: none; opacity: 0; z-index: 2;
+      background-image: repeating-linear-gradient(90deg, transparent 0%, transparent 4%, rgba(255,255,255,0.2) 4.5%, transparent 5%);
+      animation: moveLines 0.05s linear infinite; transition: opacity 0.2s;
+    }
+    @keyframes moveLines { from { background-position: 0 0; } to { background-position: 0 100vh; } }
+
+    .fever-overlay {
+      position: absolute; inset: 0; pointer-events: none; opacity: 0; z-index: 20;
+      box-shadow: inset 0 0 150px rgba(236, 72, 153, 0.9);
+      transition: opacity 0.3s; mix-blend-mode: screen;
+    }
+    .fever-overlay.active { opacity: 1; animation: pulseFever 0.15s infinite alternate; }
+    @keyframes pulseFever { from { opacity: 0.5; } to { opacity: 1; } }
+
+    /* --- 3D Moving Floor Grid --- */
+    .moving-grid {
+      position: absolute; bottom: 0; left: -50%; width: 200%; height: 50%; z-index: 2;
+      background-image: 
+        linear-gradient(to bottom, transparent 48%, rgba(34, 211, 238, 0.6) 50%, transparent 52%), 
+        linear-gradient(to right, transparent 48%, rgba(236, 72, 153, 0.4) 50%, transparent 52%); 
+      background-size: 100% 60px, 60px 100%;
+      transform: perspective(300px) rotateX(75deg);
+      transform-origin: bottom center;
+      animation: moveGrid 0.4s linear infinite;
+      mix-blend-mode: screen; pointer-events: none;
+      mask-image: linear-gradient(to bottom, transparent 0%, black 60%);
+      -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 60%);
+    }
+    @keyframes moveGrid { from { background-position: 0 0, 0 0; } to { background-position: 0 60px, 0 0; } }
+
+    /* --- Machines --- */
+    .machine-sprite {
+      width: 100%; height: 100%; object-fit: contain;
+      filter: drop-shadow(0 20px 20px rgba(0,0,0,0.9));
+      transition: filter 0.2s;
+    }
+
+    .car-container { 
+      position: absolute; bottom: 7%; left: 50%; 
+      transform: translateX(-50%); z-index: 10; 
+      width: 175px; height: 175px; perspective: 800px;
+    }
+    
+    .car-inner { width: 100%; height: 100%; transform-style: preserve-3d; }
+    
+    .car-idle .car-inner { animation: hoverCraft 2s ease-in-out infinite; }
+    @keyframes hoverCraft {
+      0% { transform: translateY(0); }
+      50% { transform: translateY(-5px); }
+      100% { transform: translateY(0); }
+    }
+    
+    .car-boost .car-inner { animation: boostShake 0.04s linear infinite; }
+    @keyframes boostShake {
+      0% { transform: translate(0, 0); }
+      50% { transform: translate(0, 4px); }
+      100% { transform: translate(0, 0); }
+    }
+    
+    .car-nitro .car-inner {
+      animation: nitroShake 0.02s linear infinite;
+      filter: drop-shadow(0 0 25px #38bdf8) drop-shadow(0 0 45px #60a5fa);
+    }
+    @keyframes nitroShake {
+      0% { transform: translate(-2px, -2px) scale(1.05); }
+      50% { transform: translate(2px, 3px) scale(1.08); }
+      100% { transform: translate(0, 0) scale(1.05); }
+    }
+
+    .braking .machine-sprite { filter: hue-rotate(90deg) brightness(0.5); }
+
+    /* Rival Cars */
+    .rival-car {
+      position: absolute; width: 140px; height: 140px;
+      transform: translateX(-50%) scale(0.25);
+      z-index: 5; perspective: 800px;
+      transition: transform 0.15s ease-out, bottom 0.25s ease-out;
+    }
+
+    /* --- Numbers & Popups --- */
+    .flash-num {
+      font-size: 7.2rem; color: #fff; font-weight: 900;
+      text-shadow: 0 0 20px #0ea5e9, 0 0 40px #0ea5e9, 0 0 80px #6366f1;
+      animation: numPop 0.1s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+    @keyframes numPop {
+      0% { transform: scale(0.2) translateZ(-200px); opacity: 0; filter: blur(10px); }
+      100% { transform: scale(1) translateZ(0); opacity: 1; filter: blur(0); }
+    }
+
+    .impact-text {
+      font-size: 3rem; line-height: 1;
+      background: linear-gradient(to bottom, #fff, #4ade80);
+      -webkit-background-clip: text; color: transparent;
+      filter: drop-shadow(0 0 10px #4ade80) drop-shadow(0 0 30px #22c55e);
+      animation: slamText 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+    .nitro-text {
+      font-size: 3.2rem; line-height: 1;
+      background: linear-gradient(to bottom, #fff, #38bdf8, #818cf8);
+      -webkit-background-clip: text; color: transparent;
+      filter: drop-shadow(0 0 15px #38bdf8) drop-shadow(0 0 40px #6366f1);
+      animation: slamText 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+    .goal-text {
+      font-size: 4rem; line-height: 1;
+      background: linear-gradient(to bottom, #fff, #fef08a, #f59e0b);
+      -webkit-background-clip: text; color: transparent;
+      filter: drop-shadow(0 0 15px #f59e0b) drop-shadow(0 0 40px #f59e0b) drop-shadow(0 0 80px #fff);
+      animation: slamText 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+    @keyframes slamText {
+      0% { transform: scale(3.5) rotate(15deg); opacity: 0; filter: blur(15px); }
+      50% { transform: scale(0.9) rotate(-3deg); opacity: 1; filter: blur(0); }
+      100% { transform: scale(1.15) rotate(0deg); opacity: 1; filter: blur(0); }
+    }
+
+    .numpad-btn {
+      background: rgba(15, 23, 42, 0.65); border: 1px solid rgba(56, 189, 248, 0.4); border-radius: 12px;
+      color: white; font-size: 2.1rem; height: 3.6rem; font-weight: 900;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: inset 0 2px 10px rgba(56, 189, 248, 0.2), 0 5px 15px rgba(0,0,0,0.5);
+      transition: transform 0.05s;
+    }
+    .numpad-btn:active { background: rgba(56, 189, 248, 0.4); transform: scale(0.88); }
+    .animate-slide-up { animation: slideUp 0.15s cubic-bezier(0.2, 1, 0.3, 1) forwards; }
+    @keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    
+    .hidden-force { display: none !important; }
+
+    .toggle-checkbox:checked { right: 0; border-color: #f472b6; }
+    .toggle-checkbox:checked + .toggle-label { background-color: #ec4899; }
+
+    /* Minimap Bar */
+    .track-minimap {
+      width: 6px; height: 160px;
+      background: rgba(30, 41, 59, 0.8);
+      border-radius: 9999px; position: relative;
+      border: 1px solid rgba(56, 189, 248, 0.4);
+    }
+    .track-pin {
+      position: absolute; left: 50%; transform: translate(-50%, 50%);
+      width: 14px; height: 14px; border-radius: 9999px;
+      transition: bottom 0.2s linear;
+    }
+  </style>
+</head>
+<body>
+
+<div class="mobile-frame" id="gameFrame">
+
+  <!-- ==================== LOBBY SCREEN ==================== -->
+  <div id="lobbyScreen" class="absolute inset-0 z-50 flex flex-col justify-between p-4 sm:p-5 bg-[#020617] overflow-hidden" style="padding-bottom: max(1rem, env(safe-area-inset-bottom)); padding-top: max(1rem, env(safe-area-inset-top));">
+    <div class="bg-layer opacity-40"></div>
+    
+    <!-- Top Header -->
+    <div class="relative z-10 flex justify-between items-center">
+      <div class="flex items-center gap-2">
+        <div class="glass-panel px-3 py-1 rounded-full flex items-center gap-1.5 border-yellow-500/50">
+          <span class="text-base">🏆</span>
+          <span class="text-yellow-400 font-black text-xs sm:text-sm tracking-wider" id="playerPoints">1,250 PTS</span>
+        </div>
+        <div class="glass-panel px-3 py-1 rounded-full flex items-center gap-1.5 border-cyan-500/50">
+          <span class="text-base">💎</span>
+          <span class="text-cyan-400 font-black text-xs sm:text-sm tracking-wider" id="playerCores">120 CORES</span>
+        </div>
+      </div>
+      <button onclick="openGarage()" class="btn-neon px-3.5 py-1.5 rounded-full text-xs font-black shadow-lg flex items-center gap-1.5">
+        ⚙️ GARAGE
+      </button>
+    </div>
+
+    <!-- Title Section -->
+    <div class="relative z-10 text-center my-auto py-1">
+      <div class="text-[9px] sm:text-[10px] text-pink-400 tracking-[0.4em] uppercase mb-1">4-PLAYER GRAND PRIX RACING</div>
+      <h1 class="text-3xl sm:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-500 to-pink-500 drop-shadow-[0_0_15px_rgba(236,72,153,0.8)] italic leading-tight">
+        ANZAN<br>F-ZERO GP
+      </h1>
+      <!-- Active Machine Badge -->
+      <div class="mt-2 inline-flex items-center gap-2 glass-panel px-3 py-1 rounded-full border-blue-400/40">
+        <span class="text-[10px] text-slate-300 font-bold uppercase">MACHINE:</span>
+        <span id="lobbyMachineName" class="text-xs text-cyan-300 font-black">BLUE FALCON</span>
+      </div>
+    </div>
+    
+    <!-- Settings & Quick Loadout -->
+    <div class="relative z-10 space-y-2 sm:space-y-3">
+      <!-- Difficulty Card -->
+      <div class="glass-panel rounded-2xl p-3 sm:p-4 border-pink-500/30">
+        <div class="flex justify-between items-end mb-2">
+          <span class="text-[11px] sm:text-xs text-slate-300 font-bold uppercase">GRAND PRIX (10 STAGES)</span>
+          <div id="diffDisplay" class="bg-pink-950/80 border border-pink-500 text-pink-400 font-black px-2.5 py-0.5 rounded-lg text-base">6級</div>
+        </div>
+        <input type="range" id="diffSlider" min="0" max="14" value="4" class="w-full mb-1 accent-pink-500">
+        <div class="flex justify-between text-[9px] text-slate-400 font-bold">
+          <span>10級</span><span>十段</span>
+        </div>
+        <div class="mt-2 flex justify-between text-[10px] sm:text-[11px] text-cyan-200 font-bold bg-slate-800/80 p-2 rounded border border-cyan-900">
+          <span id="ruleDigits">DIGITS: 2</span>
+          <span id="ruleKuchi">KUCHI: 4</span>
+          <span id="ruleTime">TIME: 4.0s</span>
+        </div>
+      </div>
+
+      <!-- Demo Driver & Equipped Items -->
+      <div class="flex gap-2">
+        <div class="glass-panel rounded-2xl p-2.5 sm:p-3 flex-1 flex justify-between items-center border-purple-500/50">
+          <span class="text-xs text-purple-300 font-bold tracking-wider">🤖 DEMO</span>
+          <label class="relative inline-block w-11 h-6 align-middle select-none">
+            <input type="checkbox" id="autoPlayToggle" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer z-10 transition-transform duration-200">
+            <label for="autoPlayToggle" class="toggle-label block overflow-hidden h-6 rounded-full bg-slate-600 cursor-pointer"></label>
+          </label>
+        </div>
+
+        <!-- Quick Item Slots Preview -->
+        <button onclick="openGarage()" class="glass-panel rounded-2xl px-3 flex items-center gap-2 border-emerald-500/40 text-left active:scale-95">
+          <div class="text-[9px] text-slate-300 font-bold">ITEMS<br><span id="lobbyItemCount" class="text-emerald-400 text-xs font-black">2 READY</span></div>
+          <span class="text-xl">🎒</span>
+        </button>
+      </div>
+
+      <!-- Start Button -->
+      <button onclick="startGame()" class="w-full btn-neon text-white font-black rounded-2xl py-3.5 sm:py-4 px-4 flex justify-center text-xl sm:text-2xl shadow-[0_0_30px_rgba(236,72,153,0.8)] animate-pulse border-pink-400 bg-gradient-to-r from-pink-500 to-purple-600">
+        🚀 BOOST START
+      </button>
+    </div>
+  </div>
+
+  <!-- ==================== GARAGE & GACHA MODAL ==================== -->
+  <div id="garageModal" class="hidden-force absolute inset-0 z-50 flex flex-col bg-slate-950/95 backdrop-blur-xl p-4 sm:p-5 overflow-y-auto" style="padding-top: max(1.2rem, env(safe-area-inset-top)); padding-bottom: max(1.2rem, env(safe-area-inset-bottom));">
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-4">
+      <div>
+        <h2 class="text-2xl font-black text-cyan-400 italic">GARAGE & SHOP</h2>
+        <div class="flex gap-3 text-xs font-bold mt-1">
+          <span class="text-yellow-400">🏆 <span id="garagePts">1,250</span> PTS</span>
+          <span class="text-cyan-400">💎 <span id="garageCores">120</span> CORES</span>
+        </div>
+      </div>
+      <button onclick="closeGarage()" class="w-9 h-9 rounded-full glass-panel flex items-center justify-center text-slate-300 hover:text-white border-slate-600 text-lg">✕</button>
+    </div>
+
+    <!-- Tabs -->
+    <div class="flex gap-2 mb-4">
+      <button id="tabMachinesBtn" onclick="switchGarageTab('machines')" class="flex-1 py-2 rounded-xl text-xs font-black bg-cyan-600 text-white border border-cyan-400">🏎️ MACHINES</button>
+      <button id="tabShopBtn" onclick="switchGarageTab('shop')" class="flex-1 py-2 rounded-xl text-xs font-black bg-slate-800 text-slate-300 border border-slate-700">🛒 ITEM SHOP</button>
+      <button id="tabGachaBtn" onclick="switchGarageTab('gacha')" class="flex-1 py-2 rounded-xl text-xs font-black bg-slate-800 text-slate-300 border border-slate-700">🎁 GACHA</button>
+    </div>
+
+    <!-- TAB 1: MACHINES -->
+    <div id="tabMachines" class="space-y-3">
+      <div id="machineCardsList" class="space-y-3">
+        <!-- Rendered by JS -->
+      </div>
+    </div>
+
+    <!-- TAB 2: ITEM SHOP -->
+    <div id="tabShop" class="hidden-force space-y-3">
+      <div class="glass-panel p-3.5 rounded-2xl border-cyan-500/30 flex justify-between items-center">
+        <div class="flex items-center gap-3">
+          <span class="text-3xl">⚡</span>
+          <div>
+            <div class="text-sm font-black text-white">NITRO CHARGE</div>
+            <div class="text-[10px] text-slate-400">次の1問正解時に超即答ニトロが確定発動</div>
+          </div>
+        </div>
+        <div class="text-right">
+          <button onclick="buyItem('nitro', 200)" class="btn-neon px-3 py-1.5 rounded-xl text-xs font-black text-white">200 PTS</button>
+          <div class="text-[10px] text-cyan-300 mt-1 font-bold">所持: <span id="countNitro">1</span></div>
+        </div>
+      </div>
+
+      <div class="glass-panel p-3.5 rounded-2xl border-purple-500/30 flex justify-between items-center">
+        <div class="flex items-center gap-3">
+          <span class="text-3xl">⏱️</span>
+          <div>
+            <div class="text-sm font-black text-white">TIME WARP</div>
+            <div class="text-[10px] text-slate-400">暗算の数字点滅速度が50%スローになり確実に読める</div>
+          </div>
+        </div>
+        <div class="text-right">
+          <button onclick="buyItem('warp', 300)" class="btn-neon px-3 py-1.5 rounded-xl text-xs font-black text-white">300 PTS</button>
+          <div class="text-[10px] text-purple-300 mt-1 font-bold">所持: <span id="countWarp">1</span></div>
+        </div>
+      </div>
+
+      <div class="glass-panel p-3.5 rounded-2xl border-emerald-500/30 flex justify-between items-center">
+        <div class="flex items-center gap-3">
+          <span class="text-3xl">🛡️</span>
+          <div>
+            <div class="text-sm font-black text-white">ENERGY SHIELD</div>
+            <div class="text-[10px] text-slate-400">誤答しても1回だけ減速・順位後退を防ぐ</div>
+          </div>
+        </div>
+        <div class="text-right">
+          <button onclick="buyItem('shield', 400)" class="btn-neon px-3 py-1.5 rounded-xl text-xs font-black text-white">400 PTS</button>
+          <div class="text-[10px] text-emerald-300 mt-1 font-bold">所持: <span id="countShield">1</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: GACHA -->
+    <div id="tabGacha" class="hidden-force flex flex-col items-center text-center py-6">
+      <div class="w-32 h-32 rounded-3xl glass-panel border-pink-500/50 flex items-center justify-center text-6xl mb-4 shadow-[0_0_40px_rgba(236,72,153,0.5)] animate-pulse">
+        📦
+      </div>
+      <h3 class="text-2xl font-black text-white italic mb-1">CYBER MACHINE GACHA</h3>
+      <p class="text-xs text-slate-300 mb-6 max-w-xs">エナジーコアを100個消費して新マシンやレア機体をアンロック！</p>
+      
+      <button onclick="spinGacha()" class="btn-neon text-white font-black px-8 py-3.5 rounded-2xl text-lg tracking-widest shadow-[0_0_30px_#ec4899] bg-gradient-to-r from-pink-500 to-purple-600">
+        💎 PULL (100 CORES)
+      </button>
+
+      <!-- Gacha Reveal Result Pop -->
+      <div id="gachaResult" class="hidden-force mt-6 glass-panel p-4 rounded-2xl border-yellow-400 w-full animate-bounce">
+        <div class="text-xs text-yellow-300 font-bold uppercase">GACHA GET!!</div>
+        <div id="gachaItemTitle" class="text-xl font-black text-white mt-1">GOLDEN PHOENIX (SSR)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== VICTORY & RESULTS SCREEN ==================== -->
+  <div id="victoryScreen" class="hidden-force absolute inset-0 z-50 flex flex-col items-center justify-between bg-slate-950/95 backdrop-blur-md p-5 text-center" style="padding-top: max(1.2rem, env(safe-area-inset-top)); padding-bottom: max(1.2rem, env(safe-area-inset-bottom));">
+    <div class="my-auto w-full">
+      <div id="resultTrophy" class="text-6xl mb-2 animate-bounce">🏆</div>
+      <h2 id="resultRankText" class="text-4xl font-black text-yellow-400 drop-shadow-[0_0_30px_#eab308] italic">1ST PLACE!</h2>
+      <p id="resultSubText" class="text-cyan-400 text-xs font-bold tracking-widest mb-4">GRAND PRIX CHAMPION</p>
+      
+      <!-- Detailed Stats Panel -->
+      <div class="glass-panel p-4 rounded-2xl w-full border-cyan-500/40 mb-4 text-left">
+        <div class="text-[10px] text-cyan-300 font-bold tracking-widest uppercase mb-2">RACE PERFORMANCE</div>
+        <div class="grid grid-cols-2 gap-2 text-xs font-bold text-slate-200">
+          <div class="bg-slate-900/70 p-2 rounded-lg">⏱️ 平均回答速度: <span id="statAvgTime" class="text-cyan-300 font-black">1.2s</span></div>
+          <div class="bg-slate-900/70 p-2 rounded-lg">⚡ ニトロ発動: <span id="statNitros" class="text-pink-400 font-black">5回</span></div>
+          <div class="bg-slate-900/70 p-2 rounded-lg">🎯 正解率: <span id="statAccuracy" class="text-green-400 font-black">100%</span></div>
+          <div class="bg-slate-900/70 p-2 rounded-lg">💥 MAXコンボ: <span id="statCombo" class="text-yellow-400 font-black">10</span></div>
+        </div>
+
+        <div class="mt-3 pt-3 border-t border-slate-700/60 flex justify-between items-center text-sm font-black">
+          <div>賞金: <span class="text-yellow-400">+<span id="earnedPts">0</span> PTS</span></div>
+          <div>コア: <span class="text-cyan-400">+<span id="earnedCores">0</span> CORES</span></div>
+        </div>
+      </div>
+      
+      <!-- Unlocked Badge Card -->
+      <div id="unlockedBadge" class="hidden-force glass-panel p-3 rounded-xl border-pink-400 flex items-center gap-3">
+        <span class="text-3xl">🏅</span>
+        <div class="text-left">
+          <div class="text-[10px] text-pink-300 font-bold uppercase">BADGE UNLOCKED!</div>
+          <div id="badgeTitle" class="text-white font-black text-sm">⚡ LIGHTNING REFLEXES</div>
+        </div>
+      </div>
+    </div>
+    
+    <button onclick="closeVictory()" class="btn-neon w-full py-4 rounded-2xl text-white font-black text-lg tracking-widest">
+      NEXT RACE
+    </button>
+  </div>
+
+  <!-- ==================== GAME SCREEN ==================== -->
+  <div id="gameScreen" class="absolute inset-0 z-0 hidden-force flex flex-col">
+    <!-- Background Layers -->
+    <div class="bg-layer"></div>
+    <canvas id="starfield"></canvas>
+    <div class="moving-grid" id="movingGrid"></div>
+    <div class="speed-lines z-10" id="speedLines"></div>
+    <div class="fever-overlay" id="feverOverlay"></div>
+    
+    <!-- 3 Rival Cars -->
+    <!-- Rival 1 (Red Vulcan - Boss) -->
+    <div id="rival1" class="rival-car" style="bottom: 42%; left: 50%;">
+      <img src="fzero_enemy_strict_rear_1790738381737.jpg" class="machine-sprite">
+    </div>
+    <!-- Rival 2 (Yellow Hornet) -->
+    <div id="rival2" class="rival-car" style="bottom: 38%; left: 32%; filter: hue-rotate(60deg);">
+      <img src="fzero_enemy_strict_rear_1790738381737.jpg" class="machine-sprite">
+    </div>
+    <!-- Rival 3 (Emerald Viper) -->
+    <div id="rival3" class="rival-car" style="bottom: 35%; left: 68%; filter: hue-rotate(140deg);">
+      <img src="fzero_enemy_strict_rear_1790738381737.jpg" class="machine-sprite">
+    </div>
+
+    <!-- HUD Top Bar -->
+    <div class="z-20 p-3 sm:p-4 flex justify-between items-center" style="padding-top: max(1rem, env(safe-area-inset-top));">
+      <!-- Left: Quit Button + Level Badge -->
+      <div class="flex items-center gap-2">
+        <button onclick="endRace(false)" class="w-9 h-9 rounded-full glass-panel flex items-center justify-center text-slate-300 hover:text-white border border-slate-500 active:scale-90">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        </button>
+        <div class="glass-panel px-3 py-1 rounded-xl flex items-center gap-1.5 border-cyan-400/60 shadow-[0_0_15px_rgba(6,182,212,0.4)]">
+          <span class="text-[9px] text-cyan-300 font-bold uppercase tracking-wider">RANK</span>
+          <span id="ingameLevel" class="text-cyan-300 font-black text-sm drop-shadow-[0_0_8px_#22d3ee]">6級</span>
+        </div>
+      </div>
+      
+      <!-- Center: Lap Badge & Live Position (1st - 4th) -->
+      <div class="flex items-center gap-2">
+        <div class="glass-panel px-3.5 py-1 rounded-full flex flex-col items-center border-pink-500/80 shadow-[0_0_15px_rgba(236,72,153,0.5)]">
+          <span id="progressText" class="text-pink-400 font-black text-xs tracking-widest">LAP 1 / 10</span>
+        </div>
+        <!-- Live Position Indicator -->
+        <div id="livePositionBadge" class="glass-panel px-3 py-1 rounded-full border-yellow-400 text-yellow-400 font-black text-xs tracking-wider shadow-[0_0_10px_#eab308]">
+          POS: 2ND
+        </div>
+      </div>
+
+      <!-- Right: Active Power-ups Bar -->
+      <div class="flex gap-1.5">
+        <button id="inGameNitroBtn" onclick="useItem('nitro')" class="w-8 h-8 rounded-lg glass-panel flex items-center justify-center border-cyan-400 text-sm active:scale-90">⚡</button>
+        <button id="inGameWarpBtn" onclick="useItem('warp')" class="w-8 h-8 rounded-lg glass-panel flex items-center justify-center border-purple-400 text-sm active:scale-90">⏱️</button>
+        <button id="inGameShieldBtn" onclick="useItem('shield')" class="w-8 h-8 rounded-lg glass-panel flex items-center justify-center border-emerald-400 text-sm active:scale-90">🛡️</button>
+      </div>
+    </div>
+    
+    <!-- Vertical Minimap Track (Left edge) -->
+    <div class="absolute left-3 top-24 z-20 flex flex-col items-center">
+      <div class="text-[8px] text-yellow-400 font-bold mb-1">🏁</div>
+      <div class="track-minimap">
+        <div id="pinPlayer" class="track-pin bg-cyan-400 shadow-[0_0_8px_#22d3ee]" style="bottom: 10%;"></div>
+        <div id="pinRival1" class="track-pin bg-red-500 shadow-[0_0_8px_#ef4444]" style="bottom: 25%;"></div>
+        <div id="pinRival2" class="track-pin bg-yellow-400 shadow-[0_0_8px_#eab308]" style="bottom: 18%;"></div>
+        <div id="pinRival3" class="track-pin bg-emerald-400 shadow-[0_0_8px_#10b981]" style="bottom: 12%;"></div>
+      </div>
+      <div class="text-[7px] text-slate-400 font-bold mt-1">START</div>
+    </div>
+
+    <div id="autoPlayIndicator" class="absolute top-16 left-1/2 -translate-x-1/2 hidden-force bg-pink-600/90 text-white text-[10px] font-bold px-3 py-1 rounded-full animate-pulse border border-pink-400 z-20 tracking-widest shadow-[0_0_10px_#ec4899]">
+      AUTO PILOT
+    </div>
+
+    <!-- Center Display -->
+    <div class="z-30 flex-grow flex flex-col items-center justify-start pt-6 pointer-events-none relative">
+      <div id="equation" class="h-28 flex items-center justify-center perspective-500 w-full relative z-10"></div>
+      <div id="feedback" class="absolute top-[42%] left-1/2 -translate-x-1/2 -translate-y-1/2 font-black uppercase tracking-widest text-center w-full z-20"></div>
+    </div>
+
+    <!-- Player Machine Asset -->
+    <div id="car" class="car-container pointer-events-none transition-transform duration-100">
+      <div class="car-inner car-idle" id="carInner">
+        <img id="playerCarSprite" src="fzero_machine_strict_rear_1790738362997.jpg" class="machine-sprite">
+      </div>
+    </div>
+
+    <!-- Speedometer -->
+    <div class="absolute bottom-[34%] right-3 z-30 pointer-events-none">
+      <div class="glass-panel w-16 h-16 rounded-full flex flex-col items-center justify-center border-t-4 border-pink-500 shadow-[0_0_25px_rgba(236,72,153,0.5)]">
+        <span id="speed" class="text-white text-xl font-black leading-none drop-shadow-[0_0_8px_#fff]">0</span>
+        <span class="text-pink-400 text-[8px] font-bold mt-1 tracking-widest">KM/H</span>
+      </div>
+    </div>
+
+    <!-- Active Shield Notification -->
+    <div id="shieldIndicator" class="hidden-force absolute bottom-[35%] left-1/2 -translate-x-1/2 glass-panel px-3 py-1 rounded-full border-emerald-400 text-emerald-300 text-[10px] font-black z-30 flex items-center gap-1 shadow-[0_0_15px_#10b981]">
+      🛡️ SHIELD ACTIVE
+    </div>
+
+    <!-- Touch Numpad -->
+    <div id="inputArea" class="hidden-force absolute bottom-0 left-0 w-full glass-panel rounded-t-3xl p-4 sm:p-5 z-40 pb-7 border-t-2 border-cyan-400 shadow-[0_-10px_50px_rgba(6,182,212,0.8)]">
+      <div class="flex justify-between items-center mb-3 px-1">
+        <!-- Quick Answer Bar -->
+        <div class="flex items-center gap-2">
+          <span class="text-[10px] text-cyan-300 font-bold tracking-widest">⚡ NITRO:</span>
+          <div class="w-20 h-2 bg-slate-800 rounded-full overflow-hidden border border-cyan-500/40">
+            <div id="nitroTimerBar" class="h-full bg-cyan-400 transition-all duration-100" style="width: 100%;"></div>
+          </div>
+        </div>
+        <div id="answerDisplay" class="text-4xl sm:text-5xl font-black text-white tracking-widest flex-grow text-center drop-shadow-[0_0_20px_#22d3ee] h-10 flex items-center justify-center"></div>
+        <button onclick="delNum()" class="text-cyan-400 text-3xl px-3 active:text-white">⌫</button>
+      </div>
+      <div class="grid grid-cols-3 gap-2 sm:gap-3">
+        <button class="numpad-btn" onclick="addNum(1, this)">1</button>
+        <button class="numpad-btn" onclick="addNum(2, this)">2</button>
+        <button class="numpad-btn" onclick="addNum(3, this)">3</button>
+        <button class="numpad-btn" onclick="addNum(4, this)">4</button>
+        <button class="numpad-btn" onclick="addNum(5, this)">5</button>
+        <button class="numpad-btn" onclick="addNum(6, this)">6</button>
+        <button class="numpad-btn" onclick="addNum(7, this)">7</button>
+        <button class="numpad-btn" onclick="addNum(8, this)">8</button>
+        <button class="numpad-btn" onclick="addNum(9, this)">9</button>
+        <button class="numpad-btn font-black text-cyan-300 bg-cyan-900/40" onclick="addNum(0, this)">0</button>
+        <button id="goBtn" class="col-span-2 btn-neon text-white font-black text-xl sm:text-2xl rounded-2xl flex items-center justify-center gap-2 tracking-widest" onclick="submitAnswer()">
+          BOOST <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ==================== AUDIO & HAPTICS ====================
+  function vibrate(pattern) { if (navigator.vibrate) navigator.vibrate(pattern); }
+  const AudioContext = window.AudioContext || window.webkitAudioContext;
+  let audioCtx;
+  function initAudio() {
+    if (!audioCtx) audioCtx = new AudioContext();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+  }
+  function playOscillator(freq, type, duration, vol=0.1) {
+    if(!audioCtx) return;
+    const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+    osc.type = type; osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+    gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    osc.start(); osc.stop(audioCtx.currentTime + duration);
+  }
+  function playKick() {
+    if(!audioCtx) return;
+    const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+    osc.type = 'sine'; osc.frequency.setValueAtTime(120, audioCtx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.6);
+    gain.gain.setValueAtTime(0.8, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.6);
+    osc.connect(gain); gain.connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime + 0.6);
+  }
+  function playNitroSound() {
+    initAudio(); playKick();
+    playOscillator(600, 'sawtooth', 0.4, 0.4);
+    setTimeout(() => playOscillator(1200, 'square', 0.3, 0.3), 100);
+  }
+  function playTap() { initAudio(); playOscillator(1200, 'sine', 0.05, 0.05); vibrate([15]); }
+  function playCorrect(comboCount) {
+    initAudio(); playKick();
+    const baseFreq = 440 * Math.pow(1.05946, comboCount % 24);
+    playOscillator(baseFreq, 'sine', 0.2, 0.4); playOscillator(baseFreq * 1.5, 'triangle', 0.3, 0.3);
+  }
+  function playWrong() { 
+    initAudio(); playOscillator(80, 'sawtooth', 0.5, 0.5); vibrate([150, 50, 150]);
+  }
+  function playVictory() {
+    initAudio(); playOscillator(440, 'sine', 0.2, 0.3);
+    setTimeout(() => playOscillator(554, 'sine', 0.2, 0.3), 200);
+    setTimeout(() => playOscillator(659, 'sine', 0.6, 0.3), 400);
+    setTimeout(() => playOscillator(880, 'square', 1.5, 0.4), 600);
+    setTimeout(() => playKick(), 600);
+  }
+
+  // --- Dynamic Black Background Removal on Sprite Load ---
+  function removeBlackBackground(imgEl) {
+    if(!imgEl.complete || imgEl.naturalWidth === 0) {
+      imgEl.onload = () => removeBlackBackground(imgEl);
+      return;
+    }
+    if(imgEl.dataset.processed) return;
+    imgEl.dataset.processed = "true";
+    const canvas = document.createElement('canvas');
+    canvas.width = imgEl.naturalWidth; canvas.height = imgEl.naturalHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(imgEl, 0, 0);
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const data = imageData.data;
+    for(let i = 0; i < data.length; i += 4) {
+      const maxVal = Math.max(data[i], data[i+1], data[i+2]);
+      if (maxVal < 10) data[i+3] = 0;
+      else if (maxVal < 60) data[i+3] = Math.floor(((maxVal - 10) / 50) * 255);
+    }
+    ctx.putImageData(imageData, 0, 0);
+    imgEl.src = canvas.toDataURL('image/png');
+  }
+  window.addEventListener('load', () => {
+    document.querySelectorAll('.machine-sprite').forEach(img => removeBlackBackground(img));
+  });
+
+  // ==================== STARFIELD ENGINE ====================
+  const canvas = document.getElementById('starfield');
+  const ctx = canvas.getContext('2d');
+  let stars = [];
+  function initStars() {
+    canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+    stars = Array.from({length: 90}, () => ({
+      x: (Math.random() - 0.5) * canvas.width * 2,
+      y: (Math.random() - 0.5) * canvas.height * 2,
+      z: Math.random() * 1000
+    }));
+  }
+  window.addEventListener('resize', initStars); initStars();
+  function drawStars() {
+    if(!isPlaying) return;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const cx = canvas.width/2, cy = canvas.height/2;
+    const starSpeed = Math.max(1, speed / 35);
+    stars.forEach(s => {
+      s.z -= starSpeed;
+      if(s.z <= 0) { s.z = 1000; s.x = (Math.random() - 0.5) * canvas.width * 2; s.y = (Math.random() - 0.5) * canvas.height * 2; }
+      const scale = 400 / s.z;
+      const px = cx + s.x * scale, py = cy + s.y * scale;
+      if(px >= 0 && px <= canvas.width && py >= 0 && py <= canvas.height) {
+        ctx.fillStyle = speed > 800 ? (Math.random()>0.5 ? '#f472b6' : '#22d3ee') : '#fff';
+        ctx.fillRect(px, py, scale * 1.5, scale * 1.5);
+      }
+    });
+    requestAnimationFrame(drawStars);
+  }
+
+  function screenFlash(color) {
+    const flash = document.createElement('div'); flash.className = 'fixed inset-0 z-[999] pointer-events-none transition-opacity duration-200';
+    flash.style.backgroundColor = color; document.body.appendChild(flash);
+    requestAnimationFrame(() => { flash.style.opacity = '0'; });
+    setTimeout(() => flash.remove(), 200);
+  }
+
+  function spawnParticles(isFestival, type='normal') {
+    const colors = type === 'goal' ? ['#fbbf24', '#f59e0b', '#fff'] : (isFestival ? ['#f472b6', '#22d3ee', '#fbbf24', '#a78bfa', '#fff'] : ['#22d3ee', '#38bdf8', '#ffffff']);
+    const originY = window.innerHeight * 0.5; const originX = window.innerWidth / 2;
+    const pCount = type === 'goal' ? 80 : 30;
+    for(let i=0; i< pCount; i++) {
+      const p = document.createElement('div');
+      p.className = 'absolute rounded-full pointer-events-none z-[100]';
+      const size = Math.random() * 14 + 4;
+      p.style.width = `${size}px`; p.style.height = `${size}px`;
+      p.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+      p.style.boxShadow = `0 0 ${size*2}px ${p.style.backgroundColor}`;
+      p.style.left = `${originX}px`; p.style.top = `${originY}px`;
+      document.body.appendChild(p);
+      const angle = Math.random() * Math.PI * 2;
+      const velocity = Math.random() * 400 + 50;
+      const tx = Math.cos(angle) * velocity; const ty = Math.sin(angle) * velocity - 80;
+      p.animate([{ transform: 'translate(-50%, -50%) scale(1)', opacity: 1 }, { transform: `translate(calc(-50% + ${tx}px), calc(-50% + ${ty}px)) scale(0)`, opacity: 0 }], { duration: 400 + Math.random() * 500, easing: 'cubic-bezier(0.25, 1, 0.5, 1)' });
+      setTimeout(() => p.remove(), 900);
+    }
+  }
+
+  // ==================== GAME DATA & RULES ====================
+  const kyuData = [
+    { name: "10級", digits: 1, kuchi: 3, time: 3000 },
+    { name: "9級", digits: 1, kuchi: 4, time: 4000 },
+    { name: "8級", digits: 1, kuchi: 5, time: 4000 },
+    { name: "7級", digits: 2, kuchi: 3, time: 4000 },
+    { name: "6級", digits: 2, kuchi: 4, time: 4000 },
+    { name: "5級", digits: 2, kuchi: 5, time: 5000 },
+    { name: "4級", digits: 2, kuchi: 7, time: 6000 },
+    { name: "3級", digits: 2, kuchi: 10, time: 7000 },
+    { name: "2級", digits: 2, kuchi: 15, time: 8000 },
+    { name: "1級", digits: 3, kuchi: 10, time: 8000 },
+    { name: "初段", digits: 3, kuchi: 15, time: 7000 },
+    { name: "三段", digits: 3, kuchi: 15, time: 5000 },
+    { name: "五段", digits: 3, kuchi: 15, time: 3500 },
+    { name: "七段", digits: 3, kuchi: 15, time: 2500 },
+    { name: "十段", digits: 3, kuchi: 15, time: 1600 }
+  ];
+
+  // ==================== MACHINES & GACHA ====================
+  const MACHINES = [
+    { id: 'falcon', name: 'BLUE FALCON', rarity: 'STANDARD', desc: 'バランス型・初期配備マシン', topSpeed: 1800, accel: 1.0, nitroBonus: 1.0, unlocked: true },
+    { id: 'vulcan', name: 'RED VULCAN', rarity: 'RARE', desc: '最高速特化型（トップスピード+25%）', topSpeed: 2200, accel: 0.85, nitroBonus: 1.1, unlocked: false },
+    { id: 'phoenix', name: 'GOLDEN PHOENIX', rarity: 'SSR', desc: '超加速型（ニトロ効果+50%）', topSpeed: 1950, accel: 1.25, nitroBonus: 1.5, unlocked: false },
+    { id: 'viper', name: 'EMERALD VIPER', rarity: 'RARE', desc: '防御安定型（初期シールド1回付与）', topSpeed: 1750, accel: 1.1, nitroBonus: 1.0, shieldInit: 1, unlocked: false }
+  ];
+
+  let currentMachine = MACHINES[0];
+  let playerPoints = 1250;
+  let playerCores = 120;
+  let itemsInventory = { nitro: 1, warp: 1, shield: 1 };
+  let activeShield = 0;
+  let activeWarpUsed = false;
+  let activeNitroUsed = false;
+
+  // Track & Race Progress (0 to 1000 meters)
+  const RACE_DISTANCE = 1000;
+  let playerDist = 0;
+  let rivals = [
+    { id: 'rival1', name: 'RED BOSS', dist: 50, speedBase: 90, color: '#ef4444' },
+    { id: 'rival2', name: 'HORNET', dist: 30, speedBase: 80, color: '#eab308' },
+    { id: 'rival3', name: 'VIPER', dist: 20, speedBase: 70, color: '#10b981' }
+  ];
+
+  // Stats Tracking
+  let raceStartTime = 0;
+  let answerTimes = [];
+  let nitroTriggers = 0;
+  let totalAnswers = 0;
+  let correctAnswers = 0;
+  let maxCombo = 0;
+  let inputStartTime = 0;
+  let nitroTimerInterval = null;
+
+  // DOM Elements
+  const gameFrame = document.getElementById('gameFrame');
+  const lobbyScreen = document.getElementById('lobbyScreen');
+  const gameScreen = document.getElementById('gameScreen');
+  const victoryScreen = document.getElementById('victoryScreen');
+  const garageModal = document.getElementById('garageModal');
+  const diffSlider = document.getElementById('diffSlider');
+  const diffDisplay = document.getElementById('diffDisplay');
+  const ingameLevel = document.getElementById('ingameLevel');
+  const equationEl = document.getElementById('equation');
+  const inputArea = document.getElementById('inputArea');
+  const answerDisplay = document.getElementById('answerDisplay');
+  const feedbackEl = document.getElementById('feedback');
+  const carEl = document.getElementById('car');
+  const carInner = document.getElementById('carInner');
+  const speedEl = document.getElementById('speed');
+  const feverOverlay = document.getElementById('feverOverlay');
+  const progressText = document.getElementById('progressText');
+  const speedLines = document.getElementById('speedLines');
+  const autoPlayToggle = document.getElementById('autoPlayToggle');
+  const autoPlayIndicator = document.getElementById('autoPlayIndicator');
+  const goBtn = document.getElementById('goBtn');
+  const playerPointsEl = document.getElementById('playerPoints');
+  const playerCoresEl = document.getElementById('playerCores');
+  const livePositionBadge = document.getElementById('livePositionBadge');
+  const nitroTimerBar = document.getElementById('nitroTimerBar');
+  const shieldIndicator = document.getElementById('shieldIndicator');
+
+  let activeRule = kyuData[4];
+  let isPlaying = false, isFirstRound = true, isAutoPlay = false, isGoal = false;
+  let speed = 80, targetSpeed = 80;
+  let numbers = [], expectedSum = 0, flashIndex = 0, playerInput = "";
+  let currentProblem = 1;
+  const totalProblems = 10;
+  let combo = 0;
+  let driveTime = 0;
+
+  // Diff Slider Logic
+  diffSlider.oninput = () => {
+    const val = parseInt(diffSlider.value);
+    activeRule = kyuData[val];
+    diffDisplay.textContent = activeRule.name;
+    ingameLevel.textContent = activeRule.name;
+    document.getElementById('ruleDigits').textContent = `DIGITS: ${activeRule.digits}`;
+    document.getElementById('ruleKuchi').textContent = `KUCHI: ${activeRule.kuchi}`;
+    document.getElementById('ruleTime').textContent = `TIME: ${(activeRule.time/1000).toFixed(1)}s`;
+  };
+  diffSlider.oninput();
+
+  autoPlayToggle.addEventListener('change', (e) => { isAutoPlay = e.target.checked; });
+
+  // Update Inventory UI
+  function updateInventoryUI() {
+    playerPointsEl.textContent = `${playerPoints.toLocaleString()} PTS`;
+    playerCoresEl.textContent = `${playerCores} CORES`;
+    document.getElementById('garagePts').textContent = playerPoints.toLocaleString();
+    document.getElementById('garageCores').textContent = playerCores;
+    document.getElementById('countNitro').textContent = itemsInventory.nitro;
+    document.getElementById('countWarp').textContent = itemsInventory.warp;
+    document.getElementById('countShield').textContent = itemsInventory.shield;
+    
+    const readyItems = itemsInventory.nitro + itemsInventory.warp + itemsInventory.shield;
+    document.getElementById('lobbyItemCount').textContent = `${readyItems} READY`;
+
+    // In-game Item Buttons state
+    document.getElementById('inGameNitroBtn').style.opacity = itemsInventory.nitro > 0 ? '1' : '0.4';
+    document.getElementById('inGameWarpBtn').style.opacity = itemsInventory.warp > 0 ? '1' : '0.4';
+    document.getElementById('inGameShieldBtn').style.opacity = itemsInventory.shield > 0 ? '1' : '0.4';
+  }
+  updateInventoryUI();
+
+  // ==================== GARAGE LOGIC ====================
+  window.openGarage = () => { garageModal.classList.remove('hidden-force'); renderMachinesList(); };
+  window.closeGarage = () => { garageModal.classList.add('hidden-force'); updateInventoryUI(); };
+  
+  window.switchGarageTab = (tab) => {
+    ['machines', 'shop', 'gacha'].forEach(t => {
+      document.getElementById(`tab${t.charAt(0).toUpperCase() + t.slice(1)}`).classList.add('hidden-force');
+      document.getElementById(`tab${t.charAt(0).toUpperCase() + t.slice(1)}Btn`).className = 'flex-1 py-2 rounded-xl text-xs font-black bg-slate-800 text-slate-300 border border-slate-700';
+    });
+    document.getElementById(`tab${tab.charAt(0).toUpperCase() + tab.slice(1)}`).classList.remove('hidden-force');
+    document.getElementById(`tab${tab.charAt(0).toUpperCase() + tab.slice(1)}Btn`).className = 'flex-1 py-2 rounded-xl text-xs font-black bg-cyan-600 text-white border border-cyan-400';
+  };
+
+  function renderMachinesList() {
+    const list = document.getElementById('machineCardsList');
+    list.innerHTML = '';
+    MACHINES.forEach(m => {
+      const isEquipped = currentMachine.id === m.id;
+      const card = document.createElement('div');
+      card.className = `glass-panel p-3.5 rounded-2xl border ${isEquipped ? 'border-cyan-400 shadow-[0_0_20px_rgba(6,182,212,0.5)]' : 'border-slate-700'} flex justify-between items-center`;
+      card.innerHTML = `
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="text-sm font-black text-white">${m.name}</span>
+            <span class="text-[9px] px-2 py-0.5 rounded font-black ${m.rarity==='SSR' ? 'bg-yellow-500 text-black':'bg-cyan-950 text-cyan-300 border border-cyan-500'}">${m.rarity}</span>
+          </div>
+          <div class="text-[10px] text-slate-300 mt-1">${m.desc}</div>
+        </div>
+        <div>
+          ${m.unlocked 
+            ? `<button onclick="equipMachine('${m.id}')" class="px-3.5 py-1.5 rounded-xl text-xs font-black ${isEquipped ? 'bg-cyan-500 text-white' : 'bg-slate-700 text-slate-200'}">${isEquipped ? 'EQUIPPED' : 'SELECT'}</button>`
+            : `<span class="text-[10px] text-slate-400 font-bold">🔒 GACHA ONLY</span>`}
+        </div>
+      `;
+      list.appendChild(card);
+    });
+  }
+
+  window.equipMachine = (id) => {
+    currentMachine = MACHINES.find(m => m.id === id);
+    document.getElementById('lobbyMachineName').textContent = currentMachine.name;
+    renderMachinesList();
+  };
+
+  window.buyItem = (itemKey, cost) => {
+    if (playerPoints >= cost) {
+      playerPoints -= cost;
+      itemsInventory[itemKey]++;
+      updateInventoryUI();
+      playTap();
+    } else {
+      alert("PTSが足りません！レースで勝利してポイントを稼ぎましょう！");
+    }
+  };
+
+  window.spinGacha = () => {
+    if (playerCores < 100) {
+      alert("エナジーコアが足りません！（100個必要）\nレースで上位フィニッシュすると獲得できます！");
+      return;
+    }
+    playerCores -= 100;
+    updateInventoryUI();
+    screenFlash('rgba(236,72,153,0.9)');
+    playNitroSound();
+
+    const locked = MACHINES.filter(m => !m.unlocked);
+    let wonItem = null;
+    if (locked.length > 0) {
+      wonItem = locked[Math.floor(Math.random() * locked.length)];
+      wonItem.unlocked = true;
+    } else {
+      playerPoints += 1000;
+      wonItem = { name: "1,000 PTS (DUPLICATE BONUS)" };
+    }
+    const resultBox = document.getElementById('gachaResult');
+    document.getElementById('gachaItemTitle').textContent = wonItem.name;
+    resultBox.classList.remove('hidden-force');
+    renderMachinesList();
+  };
+
+  // In-game Item Activation
+  window.useItem = (type) => {
+    if (itemsInventory[type] <= 0) return;
+    itemsInventory[type]--;
+    updateInventoryUI();
+    playKick();
+    
+    if (type === 'nitro') {
+      activeNitroUsed = true;
+      feedbackEl.innerHTML = '<div class="nitro-text italic">⚡ NITRO ARMED!</div>';
+    } else if (type === 'warp') {
+      activeWarpUsed = true;
+      feedbackEl.innerHTML = '<div class="impact-text italic">⏱️ TIME WARP!</div>';
+    } else if (type === 'shield') {
+      activeShield++;
+      shieldIndicator.classList.remove('hidden-force');
+      shieldIndicator.textContent = `🛡️ SHIELD ACTIVE (${activeShield})`;
+    }
+    setTimeout(() => { if (feedbackEl.textContent.includes('ARMED') || feedbackEl.textContent.includes('WARP')) feedbackEl.innerHTML = ''; }, 900);
+  };
+
+  // ==================== RACE FLOW ====================
+  const bgImages = [
+    'synthwave_fzero_track_1790737746140.jpg',
+    'fzero_track_city_1790743128079.jpg',
+    'fzero_track_space_1790743147458.jpg'
+  ];
+
+  function updateZone() {
+    let zoneIndex = 0;
+    if (currentProblem >= 4) zoneIndex = 1;
+    if (currentProblem >= 8) zoneIndex = 2;
+    const bgLayer = document.querySelector('#gameScreen .bg-layer');
+    const newUrl = `url("${bgImages[zoneIndex]}")`;
+    if (bgLayer.style.backgroundImage !== newUrl) {
+      if (bgLayer.style.backgroundImage) {
+        screenFlash('rgba(255,255,255,1)');
+        setTimeout(() => {
+          feedbackEl.innerHTML = `<div class="impact-text italic" style="font-size: 2.5rem;">ZONE ${zoneIndex+1}</div>`;
+        }, 100);
+      }
+      bgLayer.style.backgroundImage = newUrl;
+    }
+  }
+
+  window.startGame = () => {
+    initAudio();
+    lobbyScreen.classList.add('hidden-force');
+    gameScreen.classList.remove('hidden-force');
+    ingameLevel.textContent = activeRule.name;
+    
+    if(isAutoPlay) autoPlayIndicator.classList.remove('hidden-force');
+    else autoPlayIndicator.classList.add('hidden-force');
+    
+    isPlaying = true; isFirstRound = true; isGoal = false;
+    speed = 100; targetSpeed = 100; 
+    currentProblem = 1; combo = 0;
+    playerDist = 0;
+    
+    // Init Rivals
+    rivals[0].dist = 60;
+    rivals[1].dist = 40;
+    rivals[2].dist = 25;
+    
+    // Reset stats
+    raceStartTime = Date.now();
+    answerTimes = [];
+    nitroTriggers = 0;
+    totalAnswers = 0;
+    correctAnswers = 0;
+    maxCombo = 0;
+    activeShield = currentMachine.shieldInit || 0;
+    if (activeShield > 0) {
+      shieldIndicator.classList.remove('hidden-force');
+      shieldIndicator.textContent = `🛡️ SHIELD ACTIVE (${activeShield})`;
+    } else {
+      shieldIndicator.classList.add('hidden-force');
+    }
+    
+    updateInventoryUI();
+    requestAnimationFrame(drawStars);
+    startRound();
+  };
+
+  window.endRace = (isClear) => {
+    isPlaying = false;
+    gameScreen.classList.add('hidden-force');
+    inputArea.classList.add('hidden-force');
+    equationEl.innerHTML = ''; feedbackEl.innerHTML = '';
+    resetFestivalEffects();
+    
+    if (isClear) {
+      victoryScreen.classList.remove('hidden-force');
+      playVictory();
+      
+      // Calculate Stats
+      const avgTime = answerTimes.length > 0 ? (answerTimes.reduce((a,b)=>a+b, 0) / answerTimes.length / 1000).toFixed(2) : "0.0";
+      const accuracy = totalAnswers > 0 ? Math.round((correctAnswers / totalAnswers) * 100) : 100;
+      
+      document.getElementById('statAvgTime').textContent = `${avgTime}s`;
+      document.getElementById('statNitros').textContent = `${nitroTriggers}回`;
+      document.getElementById('statAccuracy').textContent = `${accuracy}%`;
+      document.getElementById('statCombo').textContent = maxCombo;
+      
+      // Calculate Rank
+      const finalRank = getPlayerPosition();
+      const rankTexts = { 1: "1ST PLACE!", 2: "2ND PLACE", 3: "3RD PLACE", 4: "4TH PLACE" };
+      const rankSub = { 1: "GRAND PRIX CHAMPION", 2: "PODIUM FINISH", 3: "PODIUM FINISH", 4: "DEFEATED" };
+      const rankTrophy = { 1: "🏆", 2: "🥈", 3: "🥉", 4: "⚠️" };
+      
+      document.getElementById('resultRankText').textContent = rankTexts[finalRank];
+      document.getElementById('resultSubText').textContent = rankSub[finalRank];
+      document.getElementById('resultTrophy').textContent = rankTrophy[finalRank];
+
+      // Rewards
+      const earnedP = (5 - finalRank) * 350 + (accuracy === 100 ? 300 : 0);
+      const earnedC = finalRank === 1 ? 50 : (finalRank === 2 ? 30 : 15);
+      
+      document.getElementById('earnedPts').textContent = earnedP;
+      document.getElementById('earnedCores').textContent = earnedC;
+      playerPoints += earnedP;
+      playerCores += earnedC;
+      updateInventoryUI();
+
+      // Check Badges
+      const badgeBox = document.getElementById('unlockedBadge');
+      if (parseFloat(avgTime) <= 1.5 && finalRank === 1) {
+        badgeBox.classList.remove('hidden-force');
+        document.getElementById('badgeTitle').textContent = "⚡ LIGHTNING FAST (平均1.5s以内)";
+      } else if (accuracy === 100) {
+        badgeBox.classList.remove('hidden-force');
+        document.getElementById('badgeTitle').textContent = "🎯 PERFECT RACER (ノーミス制覇)";
+      } else {
+        badgeBox.classList.add('hidden-force');
+      }
+    } else {
+      closeVictory();
+    }
+  };
+
+  window.closeVictory = () => {
+    victoryScreen.classList.add('hidden-force');
+    lobbyScreen.classList.remove('hidden-force');
+  };
+
+  // Numpad input
+  window.addNum = (n, btnEl) => {
+    playTap();
+    if (playerInput.length < 8) { 
+      playerInput += n; answerDisplay.textContent = playerInput; 
+    }
+  };
+  window.delNum = () => { playTap(); playerInput = playerInput.slice(0, -1); answerDisplay.textContent = playerInput; };
+
+  function startRound() {
+    if (!isPlaying) return;
+    inputArea.classList.remove('animate-slide-up');
+    inputArea.classList.add('hidden-force');
+    feedbackEl.innerHTML = '';
+    progressText.textContent = `LAP ${currentProblem} / ${totalProblems}`;
+    updateZone();
+
+    numbers = []; expectedSum = 0;
+    const { digits, kuchi } = activeRule;
+    for(let i=0; i<kuchi; i++) {
+      let max = Math.pow(10, digits) - 1;
+      let min = digits > 1 ? Math.pow(10, digits - 1) : 1;
+      let n = Math.floor(Math.random() * (max - min + 1)) + min;
+      numbers.push(n); expectedSum += n;
+    }
+    
+    if (isFirstRound) {
+      equationEl.innerHTML = '<span class="text-4xl text-slate-400 font-black tracking-widest italic">GET READY</span>';
+      setTimeout(() => { if(isPlaying) equationEl.innerHTML = '<span class="text-5xl text-pink-400 font-black tracking-widest scale-125 transition-transform italic">BOOST!</span>'; }, 600);
+      setTimeout(() => { 
+        if(!isPlaying) return;
+        isFirstRound = false; flashIndex = 0; equationEl.innerHTML = ''; flashNumber(); 
+      }, 1200);
+    } else {
+      flashIndex = 0; equationEl.innerHTML = ''; flashNumber(); 
+    }
+  }
+
+  function simulateTyping(str, idx = 0) {
+    if(!isPlaying || !isAutoPlay) return;
+    if(idx < str.length) {
+      addNum(str[idx], null);
+      setTimeout(() => simulateTyping(str, idx+1), 70);
+    } else {
+      setTimeout(() => {
+        goBtn.classList.add('scale-90', 'brightness-150'); 
+        setTimeout(() => goBtn.classList.remove('scale-90', 'brightness-150'), 100);
+        submitAnswer();
+      }, 90);
+    }
+  }
+
+  function flashNumber() {
+    if (!isPlaying) return;
+    let speedMs = activeRule.time / activeRule.kuchi; 
+    if (activeWarpUsed) { speedMs *= 1.5; activeWarpUsed = false; }
+    
+    if (flashIndex < numbers.length) {
+      const isFestival = (combo >= 4);
+      const extraClass = isFestival ? 'chromatic-aberration' : '';
+      equationEl.innerHTML = `<span class="flash-num ${extraClass} italic">${numbers[flashIndex]}</span>`;
+      
+      setTimeout(() => {
+        if (!isPlaying) return;
+        equationEl.innerHTML = ''; flashIndex++;
+        setTimeout(() => flashNumber(), speedMs * 0.25);
+      }, speedMs * 0.75);
+      
+    } else {
+      playerInput = ""; answerDisplay.textContent = "";
+      inputArea.classList.remove('hidden-force');
+      inputArea.classList.add('animate-slide-up');
+      inputStartTime = Date.now();
+      startNitroTimer();
+      
+      if (isAutoPlay) {
+        setTimeout(() => { if(!isPlaying) return; simulateTyping(expectedSum.toString()); }, 120);
+      }
+    }
+  }
+
+  function startNitroTimer() {
+    clearInterval(nitroTimerInterval);
+    nitroTimerBar.style.width = '100%';
+    nitroTimerInterval = setInterval(() => {
+      const elapsed = Date.now() - inputStartTime;
+      const remainingRatio = Math.max(0, 1 - (elapsed / 1500));
+      nitroTimerBar.style.width = `${remainingRatio * 100}%`;
+      if (remainingRatio <= 0) clearInterval(nitroTimerInterval);
+    }, 50);
+  }
+
+  window.submitAnswer = () => {
+    if (!playerInput) return;
+    clearInterval(nitroTimerInterval);
+    totalAnswers++;
+    const ans = parseInt(playerInput, 10);
+    const timeTaken = Date.now() - inputStartTime;
+    answerTimes.push(timeTaken);
+    inputArea.classList.add('hidden-force');
+    
+    if (ans === expectedSum) {
+      correctAnswers++; combo++;
+      if (combo > maxCombo) maxCombo = combo;
+      
+      // Check Quick-Answer Nitro
+      const isQuickNitro = (timeTaken <= 1500) || activeNitroUsed;
+      activeNitroUsed = false;
+      
+      if (isQuickNitro) {
+        nitroTriggers++;
+        playNitroSound();
+        targetSpeed = Math.min(speed + (700 * currentMachine.nitroBonus), currentMachine.topSpeed);
+        playerDist += 110;
+        feedbackEl.innerHTML = `<div class="nitro-text italic">⚡ NITRO BOOST!!</div>`;
+        carInner.className = 'car-inner car-nitro';
+      } else {
+        playCorrect(combo);
+        targetSpeed = Math.min(speed + (400 * currentMachine.accel), currentMachine.topSpeed);
+        playerDist += 85;
+        feedbackEl.innerHTML = `<div class="impact-text italic">PERFECT!</div>`;
+        applyFestivalEffects(combo);
+      }
+
+      spawnParticles(combo >= 4);
+      screenFlash(isQuickNitro ? 'rgba(56,189,248,0.7)' : 'rgba(255,255,255,0.7)');
+
+      // Goal Check (10 Laps)
+      if (currentProblem === totalProblems) {
+        isGoal = true;
+        vibrate([100, 100, 150]);
+        spawnParticles(true, 'goal'); screenFlash('rgba(255,255,255,1)');
+        feedbackEl.innerHTML = `<div class="goal-text italic">GOAL!!</div>`;
+        targetSpeed = 2600;
+        setTimeout(() => endRace(true), 2400);
+        return;
+      }
+      
+      currentProblem++;
+      setTimeout(() => { if (isPlaying) startRound(); }, 400);
+      
+    } else {
+      // Missed Answer
+      if (activeShield > 0) {
+        activeShield--;
+        if (activeShield === 0) shieldIndicator.classList.add('hidden-force');
+        else shieldIndicator.textContent = `🛡️ SHIELD ACTIVE (${activeShield})`;
+        
+        playKick();
+        feedbackEl.innerHTML = `<div class="impact-text italic" style="color: #10b981;">🛡️ SHIELD SAVED!</div>`;
+        setTimeout(() => { if (isPlaying) startRound(); }, 600);
+      } else {
+        playWrong(); combo = 0;
+        screenFlash('rgba(239, 68, 68, 0.7)');
+        feedbackEl.innerHTML = `<div class="text-3xl font-black text-red-500 drop-shadow-[0_0_20px_#ef4444] mt-2 italic">MISS<br><span class="text-lg text-white">Ans: ${expectedSum}</span></div>`;
+        targetSpeed = Math.max(speed - 350, 100);
+        carEl.classList.add('braking');
+        resetFestivalEffects();
+        
+        setTimeout(() => {
+          if (!isPlaying) return;
+          carEl.classList.remove('braking');
+          startRound();
+        }, 1100);
+      }
+    }
+  };
+
+  function applyFestivalEffects(level) {
+    if (level < 2) {
+      carInner.className = 'car-inner car-idle';
+      speedLines.style.opacity = '0';
+      feverOverlay.classList.remove('active');
+    } else if (level < 4) {
+      carInner.className = 'car-inner car-boost';
+      speedLines.style.opacity = '0.5';
+      feverOverlay.classList.remove('active');
+    } else {
+      carInner.className = 'car-inner car-boost scale-110';
+      speedLines.style.opacity = '1';
+      feverOverlay.classList.add('active');
+    }
+  }
+
+  function resetFestivalEffects() {
+    speedLines.style.opacity = '0';
+    feverOverlay.classList.remove('active');
+    carInner.className = 'car-inner car-idle';
+  }
+
+  // ==================== GAME LOOP & RIVAL AI ====================
+  function getPlayerPosition() {
+    const list = [
+      { name: 'player', dist: playerDist },
+      { name: 'rival1', dist: rivals[0].dist },
+      { name: 'rival2', dist: rivals[1].dist },
+      { name: 'rival3', dist: rivals[2].dist }
+    ];
+    list.sort((a,b) => b.dist - a.dist);
+    const rank = list.findIndex(item => item.name === 'player') + 1;
+    return rank;
+  }
+
+  function gameLoop() {
+    if (!isPlaying) return;
+
+    // Speed physics
+    if (speed < targetSpeed) speed = Math.min(speed + 75, targetSpeed);
+    else if (speed > targetSpeed) speed = Math.max(speed - 18, targetSpeed);
+    targetSpeed = Math.max(80, targetSpeed - 2.5);
+    speedEl.textContent = Math.floor(speed);
+    
+    // Dynamic Grid Speed
+    const gridEl = document.getElementById('movingGrid');
+    if(gridEl) {
+      let animDuration = Math.max(0.04, 0.8 - (speed / 3000));
+      gridEl.style.animationDuration = `${animDuration}s`;
+    }
+
+    // Advance Rivals based on difficulty
+    rivals[0].dist += 0.85; // Boss
+    rivals[1].dist += 0.72; // Hornet
+    rivals[2].dist += 0.60; // Viper
+    playerDist += (speed / 2800);
+
+    // Live Position
+    const currentRank = getPlayerPosition();
+    const rankLabels = ["1ST", "2ND", "3RD", "4TH"];
+    livePositionBadge.textContent = `POS: ${rankLabels[currentRank - 1]}`;
+    if (currentRank === 1) livePositionBadge.className = 'glass-panel px-3 py-1 rounded-full border-yellow-400 text-yellow-400 font-black text-xs tracking-wider shadow-[0_0_12px_#eab308]';
+    else if (currentRank === 2) livePositionBadge.className = 'glass-panel px-3 py-1 rounded-full border-cyan-400 text-cyan-400 font-black text-xs tracking-wider';
+    else livePositionBadge.className = 'glass-panel px-3 py-1 rounded-full border-slate-500 text-slate-300 font-black text-xs tracking-wider';
+
+    // Update Minimap Pins
+    document.getElementById('pinPlayer').style.bottom = `${Math.min(95, (playerDist / RACE_DISTANCE) * 95)}%`;
+    document.getElementById('pinRival1').style.bottom = `${Math.min(95, (rivals[0].dist / RACE_DISTANCE) * 95)}%`;
+    document.getElementById('pinRival2').style.bottom = `${Math.min(95, (rivals[1].dist / RACE_DISTANCE) * 95)}%`;
+    document.getElementById('pinRival3').style.bottom = `${Math.min(95, (rivals[2].dist / RACE_DISTANCE) * 95)}%`;
+
+    // 3D Weaving & Camera Parallax
+    driveTime += (speed / 45000); 
+    const weaveX = Math.sin(driveTime * 3) * 28;
+    const weaveRotate = Math.sin(driveTime * 3) * 3;
+    const bankRotate = Math.sin(driveTime * 3) * 14;
+    
+    if (speed > 50) {
+      carEl.style.transform = `translateX(calc(-50% + ${weaveX}px)) rotateZ(${weaveRotate}deg) rotateY(${bankRotate}deg)`;
+      const bgLayer = document.querySelector('#gameScreen .bg-layer');
+      if (bgLayer) {
+        bgLayer.style.backgroundPosition = `calc(50% + ${weaveX * -2.5}px) bottom`;
+      }
+    }
+
+    // Render Rival 3D Positions relative to Player
+    if (!isGoal) {
+      updateRivalRender(0, 'rival1', 50);
+      updateRivalRender(1, 'rival2', 32);
+      updateRivalRender(2, 'rival3', 68);
+    }
+  }
+
+  function updateRivalRender(idx, elementId, baseLeftPercent) {
+    const el = document.getElementById(elementId);
+    if (!el) return;
+    const distDiff = rivals[idx].dist - playerDist; // Positive: Ahead, Negative: Behind
+    
+    // Scale and bottom position based on relative distance
+    let scale = Math.max(0.12, Math.min(0.85, 0.35 + (distDiff * 0.006)));
+    let bottom = Math.max(25, Math.min(52, 40 + (distDiff * 0.1)));
+    
+    const rivalWeave = Math.sin(driveTime * 2.2 + idx) * 25;
+    el.style.left = `calc(${baseLeftPercent}% + ${rivalWeave}px)`;
+    el.style.bottom = `${bottom}%`;
+    el.style.transform = `translateX(-50%) scale(${scale})`;
+    el.style.opacity = distDiff < -80 ? '0' : '1'; // Hide if far behind
+  }
+
+  setInterval(gameLoop, 50);
+</script>
+</body>
+</html>
