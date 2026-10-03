@@ -40,7 +40,7 @@
     }
 
     .glass-panel {
-      background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+      background: rgba(15, 23, 42, 0.88); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
       border: 1px solid rgba(56, 189, 248, 0.3); box-shadow: 0 4px 25px rgba(0, 0, 0, 0.8);
     }
 
@@ -63,7 +63,7 @@
     }
 
     .impact-text {
-      font-size: 2.5rem; line-height: 1;
+      font-size: 2.4rem; line-height: 1;
       background: linear-gradient(to bottom, #fff, #4ade80);
       -webkit-background-clip: text; color: transparent;
       filter: drop-shadow(0 0 10px #4ade80) drop-shadow(0 0 25px #22c55e);
@@ -77,14 +77,14 @@
       animation: slamText 0.22s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
     }
     @keyframes slamText {
-      0% { transform: scale(3) rotate(12deg); opacity: 0; }
+      0% { transform: scale(3) rotate(10deg); opacity: 0; }
       50% { transform: scale(0.95) rotate(-3deg); opacity: 1; }
       100% { transform: scale(1.1) rotate(0deg); opacity: 1; }
     }
 
     /* Numpad */
     .numpad-btn {
-      background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 12px;
+      background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 12px;
       color: white; font-size: 1.9rem; height: 3.4rem; font-weight: 900;
       display: flex; align-items: center; justify-content: center;
       box-shadow: inset 0 2px 8px rgba(56, 189, 248, 0.15), 0 4px 12px rgba(0,0,0,0.5);
@@ -104,8 +104,7 @@
 
   <!-- ==================== LOBBY SCREEN ==================== -->
   <div id="lobbyScreen" class="absolute inset-0 z-50 flex flex-col justify-between p-4 sm:p-5 bg-[#020617] overflow-hidden" style="padding-bottom: max(1rem, env(safe-area-inset-bottom)); padding-top: max(1rem, env(safe-area-inset-top));">
-    <!-- Starfield/Ambient BG -->
-    <div class="absolute inset-0 opacity-30 pointer-events-none" style="background-image: radial-gradient(circle at 50% 30%, #38bdf8 0%, transparent 60%);"></div>
+    <div class="absolute inset-0 opacity-30 pointer-events-none" style="background-image: radial-gradient(circle at 50% 30%, #38bdf8 0%, transparent 65%);"></div>
 
     <!-- Header -->
     <div class="relative z-10 flex justify-between items-center">
@@ -126,11 +125,10 @@
 
     <!-- Title Section -->
     <div class="relative z-10 text-center my-auto py-1">
-      <div class="text-[9px] sm:text-[10px] text-pink-400 tracking-[0.4em] uppercase mb-1">4-LANE CURVED CIRCUIT RACING</div>
+      <div class="text-[9px] sm:text-[10px] text-pink-400 tracking-[0.4em] uppercase mb-1">REAL-TIME 4-CRAFT GRAND PRIX</div>
       <h1 class="text-3xl sm:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-500 to-pink-500 drop-shadow-[0_0_15px_rgba(236,72,153,0.8)] italic leading-tight">
         ANZAN<br>GRAND PRIX
       </h1>
-      <!-- Active Machine Badge -->
       <div class="mt-2 inline-flex items-center gap-2 glass-panel px-3 py-1 rounded-full border-blue-400/40">
         <span class="text-[10px] text-slate-300 font-bold uppercase">MACHINE:</span>
         <span id="lobbyMachineName" class="text-xs text-cyan-300 font-black">BLUE FALCON</span>
@@ -306,7 +304,7 @@
     </button>
   </div>
 
-  <!-- ==================== GAME SCREEN (CONCEPT B: 4-LANE CURVED CIRCUIT) ==================== -->
+  <!-- ==================== GAME SCREEN: HIGH-FIDELITY F-ZERO CURVED CIRCUIT ==================== -->
   <div id="gameScreen" class="absolute inset-0 z-0 hidden-force flex flex-col justify-between overflow-hidden">
     
     <!-- TOP SECTION: HUD & FLASH NUMBERS -->
@@ -343,14 +341,14 @@
       </div>
 
       <!-- Flash Number & Impact Feedback Area -->
-      <div class="h-28 flex flex-col items-center justify-center pointer-events-none relative mt-1">
+      <div class="h-24 flex flex-col items-center justify-center pointer-events-none relative mt-1">
         <div id="equation" class="flex items-center justify-center w-full z-10"></div>
         <div id="feedback" class="absolute inset-0 flex items-center justify-center font-black uppercase tracking-widest text-center w-full z-20"></div>
       </div>
     </div>
 
     <!-- MIDDLE SECTION: 4-LANE CURVED RACE CANVAS -->
-    <div class="relative w-full flex-grow flex items-center justify-center overflow-hidden my-1">
+    <div class="relative w-full flex-grow flex items-center justify-center overflow-hidden my-0.5">
       <canvas id="raceCanvas" class="w-full h-full block"></canvas>
       
       <!-- Auto Play Badge -->
@@ -459,6 +457,18 @@
     setTimeout(() => flash.remove(), 200);
   }
 
+  // ==================== ASSET LOADING (4K F-ZERO CRAFTS) ====================
+  const CRAFT_SPRITES = {
+    blue: new Image(),
+    red: new Image(),
+    yellow: new Image(),
+    green: new Image()
+  };
+  CRAFT_SPRITES.blue.src = 'fzero_topdown_blue_1791068086711.jpg';
+  CRAFT_SPRITES.red.src = 'fzero_topdown_red_1791068105117.jpg';
+  CRAFT_SPRITES.yellow.src = 'fzero_topdown_yellow_1791068124260.jpg';
+  CRAFT_SPRITES.green.src = 'fzero_topdown_green_1791068143222.jpg';
+
   // ==================== RULES & MACHINES ====================
   const kyuData = [
     { name: "10級", digits: 1, kuchi: 3, time: 3000 },
@@ -479,10 +489,10 @@
   ];
 
   const MACHINES = [
-    { id: 'falcon', name: 'BLUE FALCON', rarity: 'STANDARD', desc: 'バランス型・初期配備マシン', color: '#0ea5e9', topSpeed: 1800, accel: 1.0, nitroBonus: 1.0, unlocked: true },
-    { id: 'vulcan', name: 'RED VULCAN', rarity: 'RARE', desc: '最高速特化型（トップスピード+25%）', color: '#ef4444', topSpeed: 2200, accel: 0.85, nitroBonus: 1.1, unlocked: false },
-    { id: 'phoenix', name: 'GOLDEN PHOENIX', rarity: 'SSR', desc: '超加速型（ニトロ効果+50%）', color: '#f59e0b', topSpeed: 1950, accel: 1.25, nitroBonus: 1.5, unlocked: false },
-    { id: 'viper', name: 'EMERALD VIPER', rarity: 'RARE', desc: '防御安定型（初期シールド1回付与）', color: '#10b981', topSpeed: 1750, accel: 1.1, nitroBonus: 1.0, shieldInit: 1, unlocked: false }
+    { id: 'falcon', name: 'BLUE FALCON', rarity: 'STANDARD', spriteKey: 'blue', desc: 'バランス型・初期配備マシン', color: '#0ea5e9', topSpeed: 1800, accel: 1.0, nitroBonus: 1.0, unlocked: true },
+    { id: 'vulcan', name: 'RED VULCAN', rarity: 'RARE', spriteKey: 'red', desc: '最高速特化型（トップスピード+25%）', color: '#ef4444', topSpeed: 2200, accel: 0.85, nitroBonus: 1.1, unlocked: false },
+    { id: 'phoenix', name: 'GOLDEN PHOENIX', rarity: 'SSR', spriteKey: 'yellow', desc: '超加速型（ニトロ効果+50%）', color: '#f59e0b', topSpeed: 1950, accel: 1.25, nitroBonus: 1.5, unlocked: false },
+    { id: 'viper', name: 'EMERALD VIPER', rarity: 'RARE', spriteKey: 'green', desc: '防御安定型（初期シールド1回付与）', color: '#10b981', topSpeed: 1750, accel: 1.1, nitroBonus: 1.0, shieldInit: 1, unlocked: false }
   ];
 
   let currentMachine = MACHINES[0];
@@ -528,25 +538,52 @@
 
   let activeRule = kyuData[4];
   let isPlaying = false, isFirstRound = true, isAutoPlay = false, isGoal = false;
-  let speed = 80, targetSpeed = 80;
+  let speed = 120, targetSpeed = 120;
   let numbers = [], expectedSum = 0, flashIndex = 0, playerInput = "";
   let currentProblem = 1;
   const totalProblems = 10;
   let combo = 0;
 
-  // ==================== 4-LANE CURVED TRACK CANVAS ENGINE ====================
+  // ==================== PHYSICS & REAL RACER ENGINE ====================
   const canvas = document.getElementById('raceCanvas');
   const ctx = canvas.getContext('2d');
   let trackDistance = 0;
   let currentCurve = 0;
   let targetCurve = 0;
+  let particles = [];
 
-  // 4 Racers on the Track
+  // 4 Racers with realistic continuous velocity physics (NO TELEPORTATION)
   const racers = [
-    { id: 'player', name: 'YOU', isPlayer: true, dist: 0, lane: 1, targetLane: 1, color: '#38bdf8', flameColor: '#0ea5e9', width: 44, height: 60, bank: 0 },
-    { id: 'r1', name: 'RED BOSS', isPlayer: false, dist: 45, lane: 2, targetLane: 2, color: '#ef4444', flameColor: '#f97316', width: 42, height: 58, speedBase: 92, bank: 0, laneChangeTimer: 0 },
-    { id: 'r2', name: 'HORNET', isPlayer: false, dist: 30, lane: 0, targetLane: 0, color: '#facc15', flameColor: '#eab308', width: 40, height: 56, speedBase: 82, bank: 0, laneChangeTimer: 0 },
-    { id: 'r3', name: 'VIPER', isPlayer: false, dist: 15, lane: 3, targetLane: 3, color: '#10b981', flameColor: '#059669', width: 40, height: 56, speedBase: 72, bank: 0, laneChangeTimer: 0 }
+    {
+      id: 'player', name: 'YOU', isPlayer: true,
+      dist: 0, speed: 120, boostVel: 0,
+      lane: 1, targetLane: 1, bank: 0,
+      spriteKey: 'blue', flameColor: '#38bdf8', statusText: '', statusTimer: 0
+    },
+    {
+      id: 'r1', name: 'RED VULCAN', isPlayer: false,
+      dist: 35, speed: 110, boostVel: 0,
+      lane: 2, targetLane: 2, bank: 0,
+      spriteKey: 'red', flameColor: '#f97316',
+      // CP AI Personality: Aggressive, High speed, prone to risky blunders
+      baseSpeed: 105, thinkTimer: 80, missRate: 0.16, statusText: '', statusTimer: 0
+    },
+    {
+      id: 'r2', name: 'GOLD HORNET', isPlayer: false,
+      dist: 22, speed: 95, boostVel: 0,
+      lane: 0, targetLane: 0, bank: 0,
+      spriteKey: 'yellow', flameColor: '#facc15',
+      // CP AI Personality: Very consistent, steady lane changes
+      baseSpeed: 96, thinkTimer: 110, missRate: 0.06, statusText: '', statusTimer: 0
+    },
+    {
+      id: 'r3', name: 'EMERALD VIPER', isPlayer: false,
+      dist: 12, speed: 85, boostVel: 0,
+      lane: 3, targetLane: 3, bank: 0,
+      spriteKey: 'green', flameColor: '#10b981',
+      // CP AI Personality: Sporadic wild nitro bursts
+      baseSpeed: 88, thinkTimer: 95, missRate: 0.12, statusText: '', statusTimer: 0
+    }
   ];
 
   function resizeCanvas() {
@@ -564,28 +601,26 @@
 
     ctx.clearRect(0, 0, w, h);
 
-    // Track progression & curve generation (Curves change smoothly as you race)
-    trackDistance += speed * 0.05;
-    
-    // Dynamic Curve math: alternates left curves, right curves, and straights
-    targetCurve = Math.sin(trackDistance * 0.003) * 110 + Math.sin(trackDistance * 0.001) * 70;
-    currentCurve += (targetCurve - currentCurve) * 0.06;
+    // Track progression & dynamic curve geometry
+    trackDistance += speed * 0.055;
+    targetCurve = Math.sin(trackDistance * 0.003) * 125 + Math.sin(trackDistance * 0.0012) * 80;
+    currentCurve += (targetCurve - currentCurve) * 0.05;
 
-    const horizonY = 15;
+    const horizonY = 10;
     const bottomY = h;
-    const topRoadW = w * 0.42;
-    const bottomRoadW = w * 0.88;
+    const topRoadW = w * 0.40;
+    const bottomRoadW = w * 0.90;
 
-    // Background Cyber Grid / Horizon Glow
+    // Background Sky Gradient
     const bgGrad = ctx.createLinearGradient(0, 0, 0, h);
     bgGrad.addColorStop(0, '#020617');
-    bgGrad.addColorStop(0.5, '#090d1f');
+    bgGrad.addColorStop(0.45, '#070c1e');
     bgGrad.addColorStop(1, '#020617');
     ctx.fillStyle = bgGrad;
     ctx.fillRect(0, 0, w, h);
 
-    // Draw Track Surface (Slices for dynamic 3D curvature)
-    const slices = 30;
+    // Draw Curved Road Slices
+    const slices = 32;
     const sliceH = (bottomY - horizonY) / slices;
 
     for (let i = slices; i >= 0; i--) {
@@ -594,18 +629,17 @@
       const t1 = i / slices;
       const t2 = (i + 1) / slices;
 
-      const rw1 = topRoadW + (bottomRoadW - topRoadW) * Math.pow(t1, 1.4);
-      const rw2 = topRoadW + (bottomRoadW - topRoadW) * Math.pow(t2, 1.4);
+      const rw1 = topRoadW + (bottomRoadW - topRoadW) * Math.pow(t1, 1.35);
+      const rw2 = topRoadW + (bottomRoadW - topRoadW) * Math.pow(t2, 1.35);
 
-      // Curve offset increases toward horizon for perspective
       const curveOff1 = (1 - t1) * (1 - t1) * currentCurve;
       const curveOff2 = (1 - t2) * (1 - t2) * currentCurve;
 
       const cx1 = w / 2 + curveOff1;
       const cx2 = w / 2 + curveOff2;
 
-      // Dark asphalt with neon road tint
-      ctx.fillStyle = (i % 2 === 0) ? '#0b1120' : '#080d1a';
+      // Road Surface
+      ctx.fillStyle = (i % 2 === 0) ? '#0b1329' : '#080e1e';
       ctx.beginPath();
       ctx.moveTo(cx1 - rw1 / 2, y1);
       ctx.lineTo(cx1 + rw1 / 2, y1);
@@ -614,48 +648,73 @@
       ctx.closePath();
       ctx.fill();
 
-      // Glowing Neon Energy Curbs (Left & Right)
-      const curbColor = (Math.floor(trackDistance * 0.1 + i) % 2 === 0) ? '#ec4899' : '#06b6d4';
+      // Neon Track Rails / Curbs (Pink / Cyan)
+      const curbColor = (Math.floor(trackDistance * 0.12 + i) % 2 === 0) ? '#ec4899' : '#06b6d4';
       ctx.fillStyle = curbColor;
-      // Left curb
-      ctx.fillRect(cx1 - rw1 / 2 - 4, y1, 4, sliceH);
-      // Right curb
-      ctx.fillRect(cx1 + rw1 / 2, y1, 4, sliceH);
+      ctx.fillRect(cx1 - rw1 / 2 - 5, y1, 5, sliceH);
+      ctx.fillRect(cx1 + rw1 / 2, y1, 5, sliceH);
 
-      // 4 Lanes = 3 Interior Dashed Neon Dividers
-      const dashVisible = Math.floor(trackDistance * 0.15 + i) % 3 !== 0;
+      // 4 Lanes: 3 Glowing Dashed Interior Dividers
+      const dashVisible = Math.floor(trackDistance * 0.18 + i) % 3 !== 0;
       if (dashVisible) {
         ctx.fillStyle = 'rgba(56, 189, 248, 0.45)';
         for (let l = 1; l <= 3; l++) {
-          const lx1 = (cx1 - rw1 / 2) + (rw1 / 4) * l;
-          ctx.fillRect(lx1 - 1, y1, 2, sliceH);
+          const lx = (cx1 - rw1 / 2) + (rw1 / 4) * l;
+          ctx.fillRect(lx - 1, y1, 2, sliceH);
         }
       }
     }
 
-    // ==================== RACERS (Dynamic Lane Weaving & Overtaking) ====================
-    // Update Rival AI lane changes
+    // ==================== SIMULATE CP THINKING & MENTAL MATH ====================
     racers.forEach(r => {
       if (!r.isPlayer) {
-        r.laneChangeTimer--;
-        if (r.laneChangeTimer <= 0) {
-          r.laneChangeTimer = Math.floor(Math.random() * 80) + 40;
-          r.targetLane = Math.floor(Math.random() * 4); // Switch to lane 0, 1, 2, or 3
+        r.thinkTimer--;
+        if (r.thinkTimer <= 0) {
+          // CP completes a math problem!
+          r.thinkTimer = Math.floor(Math.random() * 70) + 60; // Every 2.5 ~ 4.5s
+          const roll = Math.random();
+          
+          if (roll < r.missRate) {
+            // CP MISSED!
+            r.statusText = '💥 MISS!';
+            r.statusTimer = 45;
+            r.boostVel = -220; // decelerates!
+            // Spawn sparks
+            spawnSparks(r);
+          } else if (roll < r.missRate + 0.28) {
+            // CP NITRO!
+            r.statusText = '⚡ NITRO!';
+            r.statusTimer = 40;
+            r.boostVel = 480;
+            r.targetLane = Math.floor(Math.random() * 4); // aggressive overtake
+          } else {
+            // CP REGULAR BOOST!
+            r.statusText = '▲ BOOST';
+            r.statusTimer = 35;
+            r.boostVel = 260;
+            if (Math.random() > 0.4) r.targetLane = Math.floor(Math.random() * 4);
+          }
         }
-        // Advance rival distance
-        r.dist += (r.speedBase / 100);
       }
-      // Smooth lane movement (weaving)
+
+      // Smooth Velocity Physics (Continuous Acceleration, No Teleportation)
+      r.speed += ( (r.isPlayer ? targetSpeed : r.baseSpeed) - r.speed ) * 0.08;
+      r.boostVel *= 0.94; // smooth exponential decay of boost velocity
+      const effectiveSpeed = Math.max(30, r.speed + r.boostVel);
+      r.dist += (effectiveSpeed / 2400);
+
+      // Smooth Lane Weaving
       const laneDiff = r.targetLane - r.lane;
-      r.lane += laneDiff * 0.08;
-      // Banking angle based on lane change & road curve
-      r.bank = -laneDiff * 14 - (currentCurve * 0.08);
+      r.lane += laneDiff * 0.07;
+      r.bank = -laneDiff * 15 - (currentCurve * 0.07);
+
+      if (r.statusTimer > 0) r.statusTimer--;
     });
 
-    // Advance Player distance
-    racers[0].dist += (speed / 2800);
+    // Update Player Speed HUD
+    speedEl.textContent = Math.floor(racers[0].speed + racers[0].boostVel);
 
-    // Calculate Leaderboard & Update HUD
+    // Calculate Real-time Leaderboard
     const sorted = [...racers].sort((a,b) => b.dist - a.dist);
     const playerRank = sorted.findIndex(r => r.isPlayer) + 1;
     const rankLabels = ["1ST", "2ND", "3RD", "4TH"];
@@ -664,119 +723,133 @@
     else if (playerRank === 2) livePositionBadge.className = 'glass-panel px-3 py-1 rounded-full border-cyan-400 text-cyan-400 font-black text-xs tracking-wider';
     else livePositionBadge.className = 'glass-panel px-3 py-1 rounded-full border-slate-500 text-slate-300 font-black text-xs tracking-wider';
 
-    // Sort racers by relative distance (so racers further up the track render first, behind closer ones)
+    // Render Order (Back to Front)
     const renderOrder = [...racers].sort((a,b) => b.dist - a.dist);
 
     renderOrder.forEach(r => {
-      // Calculate Y position relative to player
-      // Player is anchored around Y = 70% of canvas
-      const distDiff = r.dist - racers[0].dist; // positive = ahead, negative = behind
+      // Relative Y position smoothly calculated from continuous distance
+      const distDiff = r.dist - racers[0].dist;
       let t = 0.70 - (distDiff * 0.0055);
       t = Math.max(0.12, Math.min(0.92, t));
 
-      // Road width & center at this height t
-      const rw = topRoadW + (bottomRoadW - topRoadW) * Math.pow(t, 1.4);
+      const rw = topRoadW + (bottomRoadW - topRoadW) * Math.pow(t, 1.35);
       const curveOff = (1 - t) * (1 - t) * currentCurve;
       const cx = w / 2 + curveOff;
       const cy = horizonY + (bottomY - horizonY) * t;
 
-      // X position based on lane (0, 1, 2, 3)
       const laneW = rw / 4;
       const carX = (cx - rw / 2) + laneW * (r.lane + 0.5);
 
-      // Perspective Scale (smaller near horizon, larger near camera)
-      const scale = 0.35 + (t * 0.75);
-
-      drawSciFiHovercraft(ctx, carX, cy, scale, r);
+      const scale = 0.30 + (t * 0.70);
+      drawFZeroMachine(ctx, carX, cy, scale, r);
     });
+
+    // Draw active particle sparks
+    drawParticles(ctx);
 
     requestAnimationFrame(drawCurvedTrack);
   }
 
-  // Draw Futuristic Hovercraft with Glowing Thrusters
-  function drawSciFiHovercraft(c, x, y, scale, racer) {
+  // Draw High-Fidelity F-Zero Machine using Real Top-Down 4K AI Sprites
+  function drawFZeroMachine(c, x, y, scale, racer) {
     c.save();
     c.translate(x, y);
     c.rotate((racer.bank * Math.PI) / 180);
-    c.scale(scale, scale);
 
+    const sprite = CRAFT_SPRITES[racer.spriteKey];
     const isPlayer = racer.isPlayer;
-    const bodyColor = isPlayer ? currentMachine.color : racer.color;
-    const flameColor = isPlayer ? '#38bdf8' : racer.flameColor;
 
-    // Twin Plasma Exhaust Flames
-    const flameH = (Math.random() * 18 + 20) * (speed > 500 ? 1.6 : 1.0);
-    c.fillStyle = flameColor;
-    c.shadowColor = flameColor;
-    c.shadowBlur = 15;
-    // Left thruster flame
+    // Glowing Optical Shadow & Ground Reflection
+    c.fillStyle = 'rgba(0, 0, 0, 0.55)';
     c.beginPath();
-    c.moveTo(-14, 25);
-    c.lineTo(-10, 25 + flameH);
-    c.lineTo(-6, 25);
+    c.ellipse(0, 16 * scale, 36 * scale, 12 * scale, 0, 0, Math.PI * 2);
+    c.fill();
+
+    // Twin Plasma Afterburner Thrusters
+    const boostActive = racer.boostVel > 100;
+    const flameH = (Math.random() * 20 + 25) * (boostActive ? 2.2 : 1.1) * scale;
+    c.fillStyle = racer.flameColor;
+    c.shadowColor = racer.flameColor;
+    c.shadowBlur = boostActive ? 25 : 12;
+    
+    // Left thruster
+    c.beginPath();
+    c.moveTo(-16 * scale, 30 * scale);
+    c.lineTo(-12 * scale, (30 * scale) + flameH);
+    c.lineTo(-8 * scale, 30 * scale);
     c.closePath();
     c.fill();
-    // Right thruster flame
+    // Right thruster
     c.beginPath();
-    c.moveTo(6, 25);
-    c.lineTo(10, 25 + flameH);
-    c.lineTo(14, 25);
+    c.moveTo(8 * scale, 30 * scale);
+    c.lineTo(12 * scale, (30 * scale) + flameH);
+    c.lineTo(16 * scale, 30 * scale);
     c.closePath();
     c.fill();
     c.shadowBlur = 0; // reset
 
-    // Hovercraft Shadow
-    c.fillStyle = 'rgba(0, 0, 0, 0.45)';
-    c.beginPath();
-    c.ellipse(0, 15, 24, 8, 0, 0, Math.PI * 2);
-    c.fill();
+    // Draw the 4K AI-Generated F-ZERO Vehicle Sprite
+    if (sprite.complete && sprite.naturalWidth > 0) {
+      c.save();
+      // Screen composite mode turns the black background 100% transparent while creating vibrant metallic reflections!
+      c.globalCompositeOperation = 'screen';
+      const drawW = 95 * scale;
+      const drawH = 95 * scale;
+      c.drawImage(sprite, -drawW / 2, -drawH / 2, drawW, drawH);
+      c.restore();
+    }
 
-    // Hovercraft Main Body (Aerodynamic Dart Shape)
-    c.fillStyle = '#0f172a';
-    c.beginPath();
-    c.moveTo(0, -35); // Nose
-    c.lineTo(18, 15);  // Right wing
-    c.lineTo(12, 25);  // Right rear
-    c.lineTo(-12, 25); // Left rear
-    c.lineTo(-18, 15); // Left wing
-    c.closePath();
-    c.fill();
-
-    // Colored Armor Plates
-    c.fillStyle = bodyColor;
-    c.beginPath();
-    c.moveTo(0, -32);
-    c.lineTo(13, 10);
-    c.lineTo(8, 20);
-    c.lineTo(-8, 20);
-    c.lineTo(-13, 10);
-    c.closePath();
-    c.fill();
-
-    // Cockpit Canopy (Glowing Neon Glass)
-    c.fillStyle = '#ffffff';
-    c.shadowColor = '#38bdf8';
-    c.shadowBlur = 8;
-    c.beginPath();
-    c.ellipse(0, -8, 5, 12, 0, 0, Math.PI * 2);
-    c.fill();
-    c.shadowBlur = 0;
-
-    // Player Indicator Tag (▲ YOU)
+    // Name Tag & Dynamic CP Math Status Cue
     if (isPlayer) {
       c.fillStyle = '#38bdf8';
-      c.font = 'bold 9px Orbitron, sans-serif';
+      c.font = `bold ${Math.max(9, Math.floor(10 * scale))}px Orbitron, sans-serif`;
       c.textAlign = 'center';
-      c.fillText('YOU', 0, -42);
+      c.fillText('▲ YOU', 0, -50 * scale);
     } else {
-      // Rival Name Tag
-      c.fillStyle = 'rgba(255, 255, 255, 0.7)';
-      c.font = 'bold 8px Orbitron, sans-serif';
+      c.fillStyle = 'rgba(255, 255, 255, 0.75)';
+      c.font = `bold ${Math.max(8, Math.floor(9 * scale))}px Orbitron, sans-serif`;
       c.textAlign = 'center';
-      c.fillText(racer.name, 0, -40);
+      c.fillText(racer.name, 0, -48 * scale);
+    }
+
+    // CP Status Bubble (e.g. ⚡NITRO!, 💥MISS!)
+    if (racer.statusTimer > 0 && racer.statusText) {
+      const isMiss = racer.statusText.includes('MISS');
+      c.fillStyle = isMiss ? '#ef4444' : (racer.statusText.includes('NITRO') ? '#38bdf8' : '#facc15');
+      c.font = `bold ${Math.max(10, Math.floor(11 * scale))}px Orbitron, sans-serif`;
+      c.textAlign = 'center';
+      c.shadowColor = c.fillStyle;
+      c.shadowBlur = 10;
+      c.fillText(racer.statusText, 0, -62 * scale);
+      c.shadowBlur = 0;
     }
 
     c.restore();
+  }
+
+  function spawnSparks(racer) {
+    for (let i = 0; i < 15; i++) {
+      particles.push({
+        racer: racer,
+        x: (Math.random() - 0.5) * 30,
+        y: Math.random() * 20,
+        vx: (Math.random() - 0.5) * 6,
+        vy: Math.random() * 6 + 2,
+        life: 25,
+        color: Math.random() > 0.5 ? '#ef4444' : '#f97316'
+      });
+    }
+  }
+
+  function drawParticles(c) {
+    particles.forEach((p, idx) => {
+      p.x += p.vx;
+      p.y += p.vy;
+      p.life--;
+      c.fillStyle = p.color;
+      c.fillRect(canvas.width / 2 + p.x, canvas.height * 0.65 + p.y, 3, 3);
+    });
+    particles = particles.filter(p => p.life > 0);
   }
 
   // ==================== GARAGE & INVENTORY ====================
@@ -792,7 +865,6 @@
     const readyItems = itemsInventory.nitro + itemsInventory.warp + itemsInventory.shield;
     document.getElementById('lobbyItemCount').textContent = `${readyItems} READY`;
 
-    // Button States
     document.getElementById('inGameNitroBtn').style.opacity = itemsInventory.nitro > 0 ? '1' : '0.4';
     document.getElementById('inGameWarpBtn').style.opacity = itemsInventory.warp > 0 ? '1' : '0.4';
     document.getElementById('inGameShieldBtn').style.opacity = itemsInventory.shield > 0 ? '1' : '0.4';
@@ -839,7 +911,8 @@
   window.equipMachine = (id) => {
     currentMachine = MACHINES.find(m => m.id === id);
     document.getElementById('lobbyMachineName').textContent = currentMachine.name;
-    racers[0].color = currentMachine.color;
+    racers[0].spriteKey = currentMachine.spriteKey;
+    racers[0].flameColor = currentMachine.color;
     renderMachinesList();
   };
 
@@ -927,12 +1000,12 @@
     currentProblem = 1; combo = 0;
     trackDistance = 0;
     
-    // Reset Racers
-    racers[0].dist = 0;
-    racers[1].dist = 40;
-    racers[2].dist = 25;
-    racers[3].dist = 12;
-    racers[0].color = currentMachine.color;
+    // Reset Racers positions
+    racers[0].dist = 0; racers[0].boostVel = 0;
+    racers[1].dist = 42; racers[1].boostVel = 0;
+    racers[2].dist = 28; racers[2].boostVel = 0;
+    racers[3].dist = 14; racers[3].boostVel = 0;
+    racers[0].spriteKey = currentMachine.spriteKey;
 
     // Reset Stats
     answerTimes = [];
@@ -1051,13 +1124,13 @@
     if(!isPlaying || !isAutoPlay) return;
     if(idx < str.length) {
       addNum(str[idx], null);
-      setTimeout(() => simulateTyping(str, idx+1), 60);
+      setTimeout(() => simulateTyping(str, idx+1), 55);
     } else {
       setTimeout(() => {
         goBtn.classList.add('scale-90', 'brightness-150'); 
-        setTimeout(() => goBtn.classList.remove('scale-90', 'brightness-150'), 90);
+        setTimeout(() => goBtn.classList.remove('scale-90', 'brightness-150'), 80);
         submitAnswer();
-      }, 80);
+      }, 75);
     }
   }
 
@@ -1081,7 +1154,7 @@
       startNitroTimer();
       
       if (isAutoPlay) {
-        setTimeout(() => { if(!isPlaying) return; simulateTyping(expectedSum.toString()); }, 100);
+        setTimeout(() => { if(!isPlaying) return; simulateTyping(expectedSum.toString()); }, 90);
       }
     }
   }
@@ -1097,6 +1170,7 @@
     }, 40);
   }
 
+  // Smooth Acceleration upon Submitting Answer
   window.submitAnswer = () => {
     if (!playerInput) return;
     clearInterval(nitroTimerInterval);
@@ -1116,15 +1190,16 @@
       if (isQuickNitro) {
         nitroTriggers++;
         playNitroSound();
-        targetSpeed = Math.min(speed + (700 * currentMachine.nitroBonus), currentMachine.topSpeed);
-        racers[0].dist += 115; // Player surges forward!
-        // Weave to overtake!
+        targetSpeed = Math.min(speed + (650 * currentMachine.nitroBonus), currentMachine.topSpeed);
+        // Smooth boost acceleration (No instantaneous jump!)
+        racers[0].boostVel = 750 * currentMachine.nitroBonus;
+        // Overtake by switching lane
         racers[0].targetLane = (racers[0].targetLane + (Math.random() > 0.5 ? 1 : 3)) % 4;
         feedbackEl.innerHTML = `<div class="nitro-text italic">⚡ NITRO OVERTAKE!!</div>`;
       } else {
         playCorrect(combo);
-        targetSpeed = Math.min(speed + (400 * currentMachine.accel), currentMachine.topSpeed);
-        racers[0].dist += 80;
+        targetSpeed = Math.min(speed + (350 * currentMachine.accel), currentMachine.topSpeed);
+        racers[0].boostVel = 420 * currentMachine.accel;
         feedbackEl.innerHTML = `<div class="impact-text italic">PERFECT!</div>`;
       }
 
@@ -1137,7 +1212,8 @@
         screenFlash('rgba(255,255,255,1)');
         feedbackEl.innerHTML = `<div class="nitro-text italic" style="color: #fbbf24;">GOAL FINISH!!</div>`;
         targetSpeed = 2600;
-        setTimeout(() => endRace(true), 2200);
+        racers[0].boostVel = 1200;
+        setTimeout(() => endRace(true), 2400);
         return;
       }
       
@@ -1158,6 +1234,8 @@
         screenFlash('rgba(239, 68, 68, 0.7)');
         feedbackEl.innerHTML = `<div class="text-3xl font-black text-red-500 drop-shadow-[0_0_20px_#ef4444] mt-2 italic">MISS<br><span class="text-lg text-white">Ans: ${expectedSum}</span></div>`;
         targetSpeed = Math.max(speed - 350, 100);
+        racers[0].boostVel = -280; // Player momentarily decelerates smoothly
+        spawnSparks(racers[0]);
         
         setTimeout(() => {
           if (!isPlaying) return;
@@ -1166,15 +1244,6 @@
       }
     }
   };
-
-  // Speed physics loop
-  setInterval(() => {
-    if (!isPlaying) return;
-    if (speed < targetSpeed) speed = Math.min(speed + 75, targetSpeed);
-    else if (speed > targetSpeed) speed = Math.max(speed - 18, targetSpeed);
-    targetSpeed = Math.max(80, targetSpeed - 2.5);
-    speedEl.textContent = Math.floor(speed);
-  }, 50);
 </script>
 </body>
 </html>
