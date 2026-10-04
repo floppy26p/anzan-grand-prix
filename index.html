@@ -357,9 +357,9 @@
       </div>
     </div>
 
-    <!-- MIDDLE SECTION: 4-LANE DYNAMIC ENVIRONMENT CANVAS -->
+    <!-- MIDDLE SECTION: FREE-ROAM TOP-DOWN DYNAMIC CANVAS -->
     <div class="relative w-full flex-grow flex items-center justify-center overflow-hidden my-0.5">
-      <canvas id="raceCanvas" class="w-full h-full block"></canvas>
+      <canvas id="raceCanvas" class="w-full h-full block cursor-ew-resize" style="touch-action: none;"></canvas>
       
       <!-- Auto Play Badge -->
       <div id="autoPlayIndicator" class="absolute top-2 left-1/2 -translate-x-1/2 hidden-force bg-pink-600/90 text-white text-[9px] font-bold px-3 py-0.5 rounded-full animate-pulse border border-pink-400 z-20 tracking-widest shadow-[0_0_10px_#ec4899]">
@@ -618,32 +618,32 @@
   }
   initStarfield();
 
-  // 4 Racers
+  // 4 Racers - Continuous Lateral Freedom & Dynamic Spacing
   const racers = [
     {
       id: 'player', name: 'YOU', isPlayer: true,
       dist: 0, speed: 120, boostVel: 0,
-      lane: 1, targetLane: 1, bank: 0,
+      lateralPos: 0, targetLateral: 0, lateralVel: 0, bank: 0,
       spriteKey: 'blue', flameColor: '#38bdf8', statusText: '', statusTimer: 0
     },
     {
       id: 'r1', name: 'RED VULCAN', isPlayer: false,
       dist: 35, speed: 110, boostVel: 0,
-      lane: 2, targetLane: 2, bank: 0,
+      lateralPos: 0.50, targetLateral: 0.50, lateralVel: 0, bank: 0,
       spriteKey: 'red', flameColor: '#f97316',
       baseSpeed: 105, thinkTimer: 80, missRate: 0.16, statusText: '', statusTimer: 0
     },
     {
       id: 'r2', name: 'GOLD HORNET', isPlayer: false,
       dist: 22, speed: 95, boostVel: 0,
-      lane: 0, targetLane: 0, bank: 0,
+      lateralPos: -0.50, targetLateral: -0.50, lateralVel: 0, bank: 0,
       spriteKey: 'yellow', flameColor: '#facc15',
       baseSpeed: 96, thinkTimer: 110, missRate: 0.06, statusText: '', statusTimer: 0
     },
     {
       id: 'r3', name: 'EMERALD VIPER', isPlayer: false,
       dist: 12, speed: 85, boostVel: 0,
-      lane: 3, targetLane: 3, bank: 0,
+      lateralPos: 0.20, targetLateral: 0.20, lateralVel: 0, bank: 0,
       spriteKey: 'green', flameColor: '#10b981',
       baseSpeed: 88, thinkTimer: 95, missRate: 0.12, statusText: '', statusTimer: 0
     }
@@ -656,13 +656,16 @@
   }
   window.addEventListener('resize', resizeCanvas);
 
-  // Generate Dash Plates on track
+  // Generate Dash Plates on track (Continuous Lateral Positions Across Road)
   function initDashPlates() {
     dashPlates = [];
-    for (let d = 40; d < 1200; d += 65) {
+    const presets = [-0.60, -0.28, 0.0, 0.28, 0.60];
+    for (let d = 45; d < 1200; d += 65) {
+      // Pick organic continuous positions across track
+      const pick = presets[Math.floor(Math.random() * presets.length)] + (Math.random() * 0.12 - 0.06);
       dashPlates.push({
         dist: d,
-        lane: Math.floor(Math.random() * 4), // lane 0, 1, 2, or 3
+        lateral: Math.max(-0.68, Math.min(0.68, pick)),
         hitByPlayer: false
       });
     }
@@ -744,14 +747,20 @@
       ctx.fillRect(cx1 - rw1 / 2 - 5, y1, 5, sliceH);
       ctx.fillRect(cx1 + rw1 / 2, y1, 5, sliceH);
 
-      // 4 Lanes: 3 Glowing Dashed Interior Dividers
-      const dashVisible = Math.floor(trackDistance * 0.18 + i) % 3 !== 0;
-      if (dashVisible) {
+      // High-Tech Cyber Central Guide & Energy Ribbons (Free Roam Track - No Rigid Lanes)
+      const centerPulse = Math.floor(trackDistance * 0.20 + i) % 3 !== 0;
+      if (centerPulse) {
         ctx.fillStyle = st.laneColor;
-        for (let l = 1; l <= 3; l++) {
-          const lx = (cx1 - rw1 / 2) + (rw1 / 4) * l;
-          ctx.fillRect(lx - 1, y1, 2, sliceH);
-        }
+        ctx.fillRect(cx1 - 2, y1, 4, sliceH);
+      }
+
+      // Dynamic Cyber Speed Ribbons for spatial perspective
+      if ((Math.floor(trackDistance * 0.10 + i)) % 4 === 0) {
+        ctx.fillStyle = st.ambientColor;
+        ctx.globalAlpha = 0.30;
+        ctx.fillRect(cx1 - rw1 * 0.28, y1, 2, sliceH);
+        ctx.fillRect(cx1 + rw1 * 0.28, y1, 2, sliceH);
+        ctx.globalAlpha = 1.0;
       }
 
       // Cyber City Pillars / Canyon Arches on sides
@@ -763,7 +772,7 @@
       }
     }
 
-    // ==================== DASH PLATES (F-ZERO ACCELERATION PADS) ====================
+    // ==================== DASH PLATES (CONTINUOUS LATERAL COORDINATES) ====================
     dashPlates.forEach(dp => {
       const distDiff = dp.dist - racers[0].dist;
       let t = 0.70 - (distDiff * 0.0055);
@@ -773,8 +782,7 @@
         const cx = w / 2 + curveOff;
         const cy = horizonY + (bottomY - horizonY) * t;
 
-        const laneW = rw / 4;
-        const plateX = (cx - rw / 2) + laneW * (dp.lane + 0.5);
+        const plateX = cx + (dp.lateral * (rw * 0.46));
 
         // Draw Glowing Chevron Arrow Dash Pad (Yellow / Gold)
         ctx.save();
@@ -798,7 +806,7 @@
 
         // Check Collision with Player & Rivals
         racers.forEach(r => {
-          if (Math.abs(r.dist - dp.dist) < 3 && Math.abs(r.lane - dp.lane) < 0.45) {
+          if (Math.abs(r.dist - dp.dist) < 3.2 && Math.abs(r.lateralPos - dp.lateral) < 0.28) {
             r.boostVel += 400; // Trigger Dash Plate Boost!
             if (r.isPlayer && !dp.hitByPlayer) {
               dp.hitByPlayer = true;
@@ -831,13 +839,23 @@
             r.statusText = '⚡ NITRO!';
             r.statusTimer = 40;
             r.boostVel = 480;
-            r.targetLane = Math.floor(Math.random() * 4);
+            r.targetLateral = (Math.random() * 1.4 - 0.7);
           } else {
             // CP BOOST
             r.statusText = '▲ BOOST';
             r.statusTimer = 35;
             r.boostVel = 260;
-            if (Math.random() > 0.4) r.targetLane = Math.floor(Math.random() * 4);
+            if (Math.random() > 0.35) {
+              r.targetLateral = (Math.random() * 1.4 - 0.7);
+            }
+          }
+        }
+
+        // CP AI Dash Plate targeting
+        if (Math.random() < 0.04) {
+          const nextPlate = dashPlates.find(dp => dp.dist > r.dist && dp.dist - r.dist < 32);
+          if (nextPlate) {
+            r.targetLateral = nextPlate.lateral;
           }
         }
       }
@@ -848,12 +866,100 @@
       const effectiveSpeed = Math.max(30, r.speed + r.boostVel);
       r.dist += (effectiveSpeed / 2400);
 
-      // Smooth Lane Weaving
-      const laneDiff = r.targetLane - r.lane;
-      r.lane += laneDiff * 0.07;
-      r.bank = -laneDiff * 15 - (currentCurve * 0.07);
+      // Smooth Continuous Lateral Steering (No Rigid Lanes)
+      const latDiff = r.targetLateral - r.lateralPos;
+      r.lateralVel += (latDiff * 0.06 - r.lateralVel) * 0.20;
+      r.lateralPos += r.lateralVel;
+
+      // Road curve centrifugal drift & dynamic hovercraft banking angle
+      r.lateralPos -= currentCurve * 0.00015;
+      r.bank = (r.lateralVel * -240) - (currentCurve * 0.08);
 
       if (r.statusTimer > 0) r.statusTimer--;
+    });
+
+    // ==================== PROACTIVE OVERTAKE & DODGING AI ====================
+    racers.forEach(r => {
+      racers.forEach(other => {
+        if (other !== r) {
+          const dGap = other.dist - r.dist;
+          if (dGap > 0 && dGap < 16) {
+            const lGap = Math.abs(r.lateralPos - other.lateralPos);
+            if (lGap < 0.44) {
+              // Path is blocked! Steer smoothly towards open track to overtake
+              if (other.lateralPos > 0) {
+                r.targetLateral = Math.max(-0.72, other.lateralPos - 0.50);
+              } else {
+                r.targetLateral = Math.min(0.72, other.lateralPos + 0.50);
+              }
+            }
+          }
+        }
+      });
+    });
+
+    // ==================== PAIRWISE COLLISION REPULSION (NO OVERLAPPING) ====================
+    // Guarantee that crafts NEVER overlap physically or visually under any circumstances
+    const MIN_DIST_GAP = 7.5;  // Longitudinal distance threshold
+    const MIN_LAT_GAP = 0.40;   // Lateral threshold (car width)
+
+    for (let i = 0; i < racers.length; i++) {
+      for (let j = i + 1; j < racers.length; j++) {
+        const r1 = racers[i];
+        const r2 = racers[j];
+
+        const dGap = Math.abs(r1.dist - r2.dist);
+        const lGap = Math.abs(r1.lateralPos - r2.lateralPos);
+
+        if (dGap < MIN_DIST_GAP && lGap < MIN_LAT_GAP) {
+          // Mutual lateral repulsion
+          const latOverlap = MIN_LAT_GAP - lGap;
+          
+          let pushDir = Math.sign(r1.lateralPos - r2.lateralPos);
+          if (pushDir === 0) pushDir = (i % 2 === 0) ? 1 : -1;
+
+          const pushForce = Math.max(0.03, latOverlap * 0.5);
+          r1.lateralPos += pushDir * pushForce;
+          r2.lateralPos -= pushDir * pushForce;
+
+          r1.targetLateral += pushDir * 0.3;
+          r2.targetLateral -= pushDir * 0.3;
+
+          r1.lateralVel += pushDir * 0.015;
+          r2.lateralVel -= pushDir * 0.015;
+
+          // Micro longitudinal bumper nudge
+          if (r1.dist > r2.dist) {
+            r1.boostVel += 15;
+            r2.boostVel -= 15;
+          } else {
+            r1.boostVel -= 15;
+            r2.boostVel += 15;
+          }
+
+          // Sparks at contact point
+          if (Math.random() < 0.35) {
+            spawnContactSparks((r1.lateralPos + r2.lateralPos) * 0.5, (r1.dist + r2.dist) * 0.5);
+          }
+        }
+      }
+    }
+
+    // Keep all crafts strictly within track barriers & bounce off neon rails
+    racers.forEach(r => {
+      const TRACK_BORDER = 0.76;
+      if (r.lateralPos < -TRACK_BORDER) {
+        r.lateralPos = -TRACK_BORDER;
+        r.lateralVel = Math.abs(r.lateralVel) * 0.5;
+        r.targetLateral = -TRACK_BORDER + 0.25;
+        if (Math.random() < 0.25) spawnContactSparks(-TRACK_BORDER, r.dist);
+      } else if (r.lateralPos > TRACK_BORDER) {
+        r.lateralPos = TRACK_BORDER;
+        r.lateralVel = -Math.abs(r.lateralVel) * 0.5;
+        r.targetLateral = TRACK_BORDER - 0.25;
+        if (Math.random() < 0.25) spawnContactSparks(TRACK_BORDER, r.dist);
+      }
+      r.targetLateral = Math.max(-TRACK_BORDER, Math.min(TRACK_BORDER, r.targetLateral));
     });
 
     // Update Speedometer
@@ -881,8 +987,7 @@
       const cx = w / 2 + curveOff;
       const cy = horizonY + (bottomY - horizonY) * t;
 
-      const laneW = rw / 4;
-      const carX = (cx - rw / 2) + laneW * (r.lane + 0.5);
+      const carX = cx + (r.lateralPos * (rw * 0.46));
 
       const scale = 0.30 + (t * 0.70);
       drawFZeroMachine(ctx, carX, cy, scale, r);
@@ -971,26 +1076,58 @@
   }
 
   function spawnSparks(racer) {
-    for (let i = 0; i < 15; i++) {
+    const distDiff = racer.dist - racers[0].dist;
+    let t = 0.70 - (distDiff * 0.0055);
+    t = Math.max(0.12, Math.min(0.92, t));
+    const rw = (canvas.width * 0.40) + ((canvas.width * 0.90) - (canvas.width * 0.40)) * Math.pow(t, 1.35);
+    const curveOff = (1 - t) * (1 - t) * currentCurve;
+    const cx = canvas.width / 2 + curveOff;
+    const cy = 12 + (canvas.height - 12) * t;
+    const carX = cx + (racer.lateralPos * (rw * 0.46));
+
+    for (let i = 0; i < 16; i++) {
       particles.push({
-        racer: racer,
-        x: (Math.random() - 0.5) * 30,
-        y: Math.random() * 20,
-        vx: (Math.random() - 0.5) * 6,
-        vy: Math.random() * 6 + 2,
+        x: carX + (Math.random() - 0.5) * 20,
+        y: cy + 10 + Math.random() * 15,
+        vx: (Math.random() - 0.5) * 7,
+        vy: Math.random() * 5 + 2,
         life: 25,
+        size: Math.random() * 2.5 + 2,
         color: Math.random() > 0.5 ? '#ef4444' : '#f97316'
       });
     }
   }
 
+  function spawnContactSparks(normLat, trackDist) {
+    const distDiff = trackDist - racers[0].dist;
+    let t = 0.70 - (distDiff * 0.0055);
+    t = Math.max(0.12, Math.min(0.92, t));
+    const rw = (canvas.width * 0.40) + ((canvas.width * 0.90) - (canvas.width * 0.40)) * Math.pow(t, 1.35);
+    const curveOff = (1 - t) * (1 - t) * currentCurve;
+    const cx = canvas.width / 2 + curveOff;
+    const cy = 12 + (canvas.height - 12) * t;
+    const contactX = cx + (normLat * (rw * 0.46));
+
+    for (let i = 0; i < 8; i++) {
+      particles.push({
+        x: contactX + (Math.random() - 0.5) * 12,
+        y: cy + (Math.random() - 0.5) * 12,
+        vx: (Math.random() - 0.5) * 8,
+        vy: (Math.random() - 0.5) * 8 + 2,
+        life: 18,
+        size: Math.random() * 2.5 + 1.5,
+        color: Math.random() > 0.35 ? '#fef08a' : '#f97316'
+      });
+    }
+  }
+
   function drawParticles(c) {
-    particles.forEach((p, idx) => {
+    particles.forEach(p => {
       p.x += p.vx;
       p.y += p.vy;
       p.life--;
       c.fillStyle = p.color;
-      c.fillRect(canvas.width / 2 + p.x, canvas.height * 0.65 + p.y, 3, 3);
+      c.fillRect(p.x, p.y, p.size || 3, p.size || 3);
     });
     particles = particles.filter(p => p.life > 0);
   }
@@ -1165,11 +1302,11 @@
     
     initDashPlates();
 
-    // Reset Racers
-    racers[0].dist = 0; racers[0].boostVel = 0;
-    racers[1].dist = 42; racers[1].boostVel = 0;
-    racers[2].dist = 28; racers[2].boostVel = 0;
-    racers[3].dist = 14; racers[3].boostVel = 0;
+    // Reset Racers with continuous lateral distribution
+    racers[0].dist = 0; racers[0].boostVel = 0; racers[0].lateralPos = 0; racers[0].targetLateral = 0; racers[0].lateralVel = 0;
+    racers[1].dist = 42; racers[1].boostVel = 0; racers[1].lateralPos = 0.50; racers[1].targetLateral = 0.50; racers[1].lateralVel = 0;
+    racers[2].dist = 28; racers[2].boostVel = 0; racers[2].lateralPos = -0.50; racers[2].targetLateral = -0.50; racers[2].lateralVel = 0;
+    racers[3].dist = 14; racers[3].boostVel = 0; racers[3].lateralPos = 0.20; racers[3].targetLateral = 0.20; racers[3].lateralVel = 0;
     racers[0].spriteKey = currentMachine.spriteKey;
 
     // Reset Stats
@@ -1357,12 +1494,32 @@
         playNitroSound();
         targetSpeed = Math.min(speed + (650 * currentMachine.nitroBonus), currentMachine.topSpeed);
         racers[0].boostVel = 750 * currentMachine.nitroBonus;
-        racers[0].targetLane = (racers[0].targetLane + (Math.random() > 0.5 ? 1 : 3)) % 4;
+        
+        // Dynamic lateral overtake: steer into open space away from rivals ahead
+        const rivalAhead = racers.filter(r => !r.isPlayer && r.dist > racers[0].dist && r.dist - racers[0].dist < 30)
+                                 .sort((a,b) => (a.dist - racers[0].dist) - (b.dist - racers[0].dist))[0];
+        if (rivalAhead) {
+          racers[0].targetLateral = rivalAhead.lateralPos >= 0 ? rivalAhead.lateralPos - 0.48 : rivalAhead.lateralPos + 0.48;
+        } else {
+          racers[0].targetLateral = (Math.random() * 1.3 - 0.65);
+        }
+        racers[0].targetLateral = Math.max(-0.75, Math.min(0.75, racers[0].targetLateral));
+        
         feedbackEl.innerHTML = `<div class="nitro-text italic">⚡ NITRO OVERTAKE!!</div>`;
       } else {
         playCorrect(combo);
         targetSpeed = Math.min(speed + (350 * currentMachine.accel), currentMachine.topSpeed);
         racers[0].boostVel = 420 * currentMachine.accel;
+        
+        // Gentle drift toward open track or dash plate
+        const nextPad = dashPlates.find(dp => dp.dist > racers[0].dist && dp.dist - racers[0].dist < 45);
+        if (nextPad) {
+          racers[0].targetLateral = nextPad.lateral;
+        } else if (Math.random() < 0.4) {
+          racers[0].targetLateral = (Math.random() * 1.2 - 0.6);
+        }
+        racers[0].targetLateral = Math.max(-0.75, Math.min(0.75, racers[0].targetLateral));
+
         feedbackEl.innerHTML = `<div class="impact-text italic">PERFECT!</div>`;
       }
 
@@ -1407,6 +1564,40 @@
       }
     }
   };
+
+  // ==================== INTERACTIVE CONTINUOUS STEERING CONTROLS ====================
+  // Allows players to freely steer with touch/drag or keyboard across the wide track
+  let isDraggingTrack = false;
+  function updatePlayerSteerFromPointer(clientX) {
+    if (!isPlaying) return;
+    const rect = canvas.getBoundingClientRect();
+    if (rect.width <= 0) return;
+    const normX = (clientX - rect.left) / rect.width; // 0.0 (left) to 1.0 (right)
+    const steerTarget = (normX - 0.5) * 1.7; // map center to 0.0, left edge to -0.85, right to +0.85
+    racers[0].targetLateral = Math.max(-0.75, Math.min(0.75, steerTarget));
+  }
+
+  canvas.addEventListener('pointerdown', (e) => {
+    isDraggingTrack = true;
+    updatePlayerSteerFromPointer(e.clientX);
+  });
+  window.addEventListener('pointermove', (e) => {
+    if (isDraggingTrack) {
+      updatePlayerSteerFromPointer(e.clientX);
+    }
+  });
+  window.addEventListener('pointerup', () => { isDraggingTrack = false; });
+  window.addEventListener('pointercancel', () => { isDraggingTrack = false; });
+
+  // Arrow keys & A/D keyboard steering for desktop
+  window.addEventListener('keydown', (e) => {
+    if (!isPlaying) return;
+    if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
+      racers[0].targetLateral = Math.max(-0.75, racers[0].targetLateral - 0.26);
+    } else if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
+      racers[0].targetLateral = Math.min(0.75, racers[0].targetLateral + 0.26);
+    }
+  });
 </script>
 </body>
 </html>
