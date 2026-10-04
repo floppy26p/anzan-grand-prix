@@ -53,9 +53,14 @@
 
     /* Flash Numbers & Feedback */
     .flash-num {
-      font-size: 6.2rem; color: #fff; font-weight: 900; line-height: 1;
-      text-shadow: 0 0 20px #0ea5e9, 0 0 40px #0ea5e9, 0 0 80px #6366f1;
-      animation: numPop 0.1s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+      font-size: clamp(3.8rem, 15vw, 6.2rem);
+      color: #ffffff;
+      font-weight: 900;
+      line-height: 1;
+      text-shadow: 0 4px 18px rgba(0, 0, 0, 0.95), 0 0 30px #0284c7, 0 0 60px #38bdf8;
+      animation: numPop 0.08s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+      user-select: none;
+      pointer-events: none;
     }
     @keyframes numPop {
       0% { transform: scale(0.3); opacity: 0; filter: blur(10px); }
@@ -144,20 +149,64 @@
     
     <!-- Settings & Quick Loadout -->
     <div class="relative z-10 space-y-2 sm:space-y-3">
-      <!-- Difficulty Card -->
-      <div class="glass-panel rounded-2xl p-3 sm:p-4 border-pink-500/30">
-        <div class="flex justify-between items-end mb-2">
-          <span class="text-[11px] sm:text-xs text-slate-300 font-bold uppercase">GRAND PRIX (10 LAPS)</span>
-          <div id="diffDisplay" class="bg-pink-950/80 border border-pink-500 text-pink-400 font-black px-2.5 py-0.5 rounded-lg text-base">6級</div>
+      <!-- Association & Difficulty Card -->
+      <div class="glass-panel rounded-2xl p-3 sm:p-4 border-pink-500/40 shadow-[0_0_20px_rgba(236,72,153,0.25)]">
+        <!-- Association Selector Tabs -->
+        <div class="mb-2.5">
+          <div class="flex justify-between items-center mb-1.5">
+            <span class="text-[10px] text-cyan-300 font-black tracking-widest uppercase flex items-center gap-1">
+              <span>🏛️</span> 公式検定連盟・協会ルール
+            </span>
+            <span id="assocBadge" class="text-[9px] px-2 py-0.5 rounded-full font-black bg-pink-950 text-pink-300 border border-pink-500/60">公式規格</span>
+          </div>
+          <div class="grid grid-cols-3 gap-1 bg-slate-900/90 p-1 rounded-xl border border-slate-700/80">
+            <button id="assocBtn_flash" onclick="selectAssociation('flash_assoc')" class="py-1.5 px-1 rounded-lg text-[10px] sm:text-[11px] font-black tracking-tighter transition-all bg-pink-600 text-white shadow-[0_0_12px_rgba(236,72,153,0.6)]">
+              日フ検協
+            </button>
+            <button id="assocBtn_zenju" onclick="selectAssociation('zenjuren')" class="py-1.5 px-1 rounded-lg text-[10px] sm:text-[11px] font-black tracking-tighter transition-all text-slate-400 hover:text-white">
+              全珠連
+            </button>
+            <button id="assocBtn_nichiju" onclick="selectAssociation('nichijuren')" class="py-1.5 px-1 rounded-lg text-[10px] sm:text-[11px] font-black tracking-tighter transition-all text-slate-400 hover:text-white">
+              日珠連
+            </button>
+          </div>
+          <div id="assocFullName" class="text-[10px] sm:text-xs text-pink-300 font-bold mt-1 text-center truncate">
+            一般社団法人 日本フラッシュ暗算検定協会
+          </div>
         </div>
-        <input type="range" id="diffSlider" min="0" max="14" value="4" class="w-full mb-1 accent-pink-500">
+
+        <!-- Level Display & Quick Pick Modal Button -->
+        <div class="flex justify-between items-center mb-2 pt-1.5 border-t border-slate-700/60">
+          <div>
+            <span class="text-[10px] text-slate-300 font-bold uppercase tracking-wider">検定レベル (10 LAPS)</span>
+            <div class="flex items-center gap-2 mt-0.5">
+              <div id="diffDisplay" class="bg-pink-950/90 border border-pink-500 text-pink-400 font-black px-3 py-0.5 rounded-lg text-lg drop-shadow-[0_0_8px_#ec4899]">6級</div>
+              <button onclick="openLevelModal()" class="px-2.5 py-1 rounded-lg text-[10px] font-black bg-cyan-950 text-cyan-300 border border-cyan-500/70 hover:bg-cyan-900 active:scale-95 flex items-center gap-1 shadow-[0_0_8px_rgba(6,182,212,0.4)]">
+                <span>📋</span> 一覧から選ぶ
+              </button>
+            </div>
+          </div>
+          <div class="text-right">
+            <span class="text-[9px] text-slate-400 font-bold">1口速度</span>
+            <div id="ruleSpeed" class="text-xs font-black text-cyan-300">1.50s / 口</div>
+          </div>
+        </div>
+
+        <!-- Slider -->
+        <input type="range" id="diffSlider" min="0" max="22" value="6" class="w-full mb-1 accent-pink-500 cursor-pointer">
         <div class="flex justify-between text-[9px] text-slate-400 font-bold">
-          <span>10級</span><span>十段</span>
+          <span id="sliderMinLabel">20級</span>
+          <span id="sliderMaxLabel">二十段</span>
         </div>
-        <div class="mt-2 flex justify-between text-[10px] sm:text-[11px] text-cyan-200 font-bold bg-slate-800/80 p-2 rounded border border-cyan-900">
-          <span id="ruleDigits">DIGITS: 2</span>
-          <span id="ruleKuchi">KUCHI: 4</span>
-          <span id="ruleTime">TIME: 4.0s</span>
+
+        <!-- Rule Specifications Grid -->
+        <div class="mt-2 grid grid-cols-3 gap-1 text-[10px] sm:text-[11px] text-cyan-200 font-bold bg-slate-900/90 p-2 rounded-xl border border-cyan-900/80 text-center">
+          <div>桁数: <span id="ruleDigits" class="text-white font-black">2桁</span></div>
+          <div>口数: <span id="ruleKuchi" class="text-white font-black">6口</span></div>
+          <div>秒数: <span id="ruleTime" class="text-white font-black">9.0s</span></div>
+        </div>
+        <div class="mt-1.5 text-[9px] text-slate-400 text-center font-bold">
+          公式合格基準: 10問中7問正解 (70点以上)
         </div>
       </div>
 
@@ -273,12 +322,52 @@
     </div>
   </div>
 
+  <!-- ==================== LEVEL SELECT MODAL ==================== -->
+  <div id="levelSelectModal" class="hidden-force absolute inset-0 z-50 flex flex-col bg-slate-950/95 backdrop-blur-xl p-4 sm:p-5 overflow-y-auto" style="padding-top: max(1.2rem, env(safe-area-inset-top)); padding-bottom: max(1.2rem, env(safe-area-inset-bottom));">
+    <div class="flex justify-between items-center mb-3">
+      <div>
+        <h2 class="text-xl sm:text-2xl font-black text-pink-400 italic">OFFICIAL LEVEL SELECT</h2>
+        <div id="modalAssocTitle" class="text-xs font-bold text-cyan-300">一般社団法人 日本フラッシュ暗算検定協会</div>
+      </div>
+      <button onclick="closeLevelModal()" class="w-8 h-8 rounded-full glass-panel flex items-center justify-center text-slate-400 hover:text-white border border-slate-600 active:scale-90">✕</button>
+    </div>
+
+    <!-- Filter Tabs: All, Kyu, Dan -->
+    <div class="flex gap-1.5 mb-3">
+      <button id="levelTabAll" onclick="filterLevelModal('all')" class="flex-1 py-1.5 rounded-xl text-xs font-black bg-pink-600 text-white border border-pink-400">すべて</button>
+      <button id="levelTabKyu" onclick="filterLevelModal('kyu')" class="flex-1 py-1.5 rounded-xl text-xs font-black bg-slate-800 text-slate-300 border border-slate-700">級位のみ</button>
+      <button id="levelTabDan" onclick="filterLevelModal('dan')" class="flex-1 py-1.5 rounded-xl text-xs font-black bg-slate-800 text-slate-300 border border-slate-700">段位のみ</button>
+    </div>
+
+    <!-- Dynamic Cards Grid -->
+    <div id="levelCardsGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-2 overflow-y-auto pb-6">
+      <!-- Populated via renderLevelCards() -->
+    </div>
+  </div>
+
   <!-- ==================== VICTORY & RESULTS SCREEN ==================== -->
   <div id="victoryScreen" class="hidden-force absolute inset-0 z-50 flex flex-col items-center justify-between bg-slate-950/95 backdrop-blur-md p-5 text-center" style="padding-top: max(1.2rem, env(safe-area-inset-top)); padding-bottom: max(1.2rem, env(safe-area-inset-bottom));">
     <div class="my-auto w-full">
       <div id="resultTrophy" class="text-6xl mb-2 animate-bounce">🏆</div>
       <h2 id="resultRankText" class="text-4xl font-black text-yellow-400 drop-shadow-[0_0_30px_#eab308] italic">1ST PLACE!</h2>
-      <p id="resultSubText" class="text-cyan-400 text-xs font-bold tracking-widest mb-4">GRAND PRIX CHAMPION</p>
+      <p id="resultSubText" class="text-cyan-400 text-xs font-bold tracking-widest mb-3">GRAND PRIX CHAMPION</p>
+
+      <!-- Official Association Certification Result Panel -->
+      <div class="glass-panel p-3.5 rounded-2xl w-full border-pink-500/50 mb-3 text-left shadow-[0_0_15px_rgba(236,72,153,0.3)]">
+        <div class="flex justify-between items-center mb-1">
+          <span id="resultAssocName" class="text-[10px] text-pink-300 font-bold truncate">一般社団法人 日本フラッシュ暗算検定協会</span>
+          <span id="resultRuleName" class="text-xs font-black text-white px-2 py-0.5 rounded bg-pink-950 border border-pink-500">6級</span>
+        </div>
+        <div class="flex justify-between items-center mt-2">
+          <div>
+            <div class="text-[9px] text-slate-400">公式検定判定 (70点以上合格):</div>
+            <div id="resultScoreText" class="text-xs font-black text-slate-200">10問中 8問正解 (80点)</div>
+          </div>
+          <div id="resultPassBadge" class="px-3 py-1 rounded-xl text-xs font-black bg-emerald-500 text-white shadow-[0_0_12px_#10b981]">
+            合格 CERTIFIED!
+          </div>
+        </div>
+      </div>
       
       <!-- Stats Panel -->
       <div class="glass-panel p-4 rounded-2xl w-full border-cyan-500/40 mb-4 text-left">
@@ -324,7 +413,7 @@
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
           </button>
           <div class="glass-panel px-2.5 py-1 rounded-xl flex items-center gap-1.5 border-cyan-400/60 shadow-[0_0_12px_rgba(6,182,212,0.4)]">
-            <span class="text-[9px] text-cyan-300 font-bold">RANK</span>
+            <span class="text-[9px] text-cyan-300 font-bold" id="ingameAssocTag">日フ</span>
             <span id="ingameLevel" class="text-cyan-300 font-black text-sm drop-shadow-[0_0_8px_#22d3ee]">6級</span>
           </div>
         </div>
@@ -350,16 +439,18 @@
         </div>
       </div>
 
-      <!-- Flash Number & Impact Feedback Area -->
-      <div class="h-24 flex flex-col items-center justify-center pointer-events-none relative mt-1">
-        <div id="equation" class="flex items-center justify-center w-full z-10"></div>
-        <div id="feedback" class="absolute inset-0 flex items-center justify-center font-black uppercase tracking-widest text-center w-full z-20"></div>
+      <!-- Flash Number Display Area (Sole Occupant, Dedicated High-Contrast Focus) -->
+      <div class="h-28 flex flex-col items-center justify-center pointer-events-none relative mt-1 z-30 select-none">
+        <div id="equation" class="flex items-center justify-center w-full z-30 drop-shadow-[0_4px_24px_rgba(0,0,0,0.95)]"></div>
       </div>
     </div>
 
     <!-- MIDDLE SECTION: FREE-ROAM TOP-DOWN DYNAMIC CANVAS -->
-    <div class="relative w-full flex-grow flex items-center justify-center overflow-hidden my-0.5">
+    <div id="trackContainer" class="relative w-full flex-grow flex items-center justify-center overflow-hidden my-0.5">
       <canvas id="raceCanvas" class="w-full h-full block cursor-ew-resize" style="touch-action: none;"></canvas>
+      
+      <!-- Floating Race Track Feedback (Over the Circuit, Completely Separated from Numbers) -->
+      <div id="feedback" class="absolute top-3 left-1/2 -translate-x-1/2 font-black uppercase tracking-widest text-center w-full max-w-[90%] z-20 pointer-events-none transition-all duration-150"></div>
       
       <!-- Auto Play Badge -->
       <div id="autoPlayIndicator" class="absolute top-2 left-1/2 -translate-x-1/2 hidden-force bg-pink-600/90 text-white text-[9px] font-bold px-3 py-0.5 rounded-full animate-pulse border border-pink-400 z-20 tracking-widest shadow-[0_0_10px_#ec4899]">
@@ -466,10 +557,14 @@
   }
 
   function screenFlash(color) {
-    const flash = document.createElement('div'); flash.className = 'fixed inset-0 z-[999] pointer-events-none transition-opacity duration-200';
-    flash.style.backgroundColor = color; document.body.appendChild(flash);
+    if (isFlashingNumbers) return; // Strictly blocked during active calculation so numbers are NEVER obscured!
+    const container = document.getElementById('trackContainer') || document.body;
+    const flash = document.createElement('div');
+    flash.className = 'absolute inset-0 z-20 pointer-events-none transition-opacity duration-200';
+    flash.style.backgroundColor = color;
+    container.appendChild(flash);
     requestAnimationFrame(() => { flash.style.opacity = '0'; });
-    setTimeout(() => flash.remove(), 200);
+    setTimeout(() => flash.remove(), 220);
   }
 
   // ==================== ASSET LOADING (4K F-ZERO CRAFTS) ====================
@@ -523,24 +618,103 @@
 
   let currentStageIndex = 0;
 
-  // ==================== RULES & MACHINES ====================
-  const kyuData = [
-    { name: "10級", digits: 1, kuchi: 3, time: 3000 },
-    { name: "9級", digits: 1, kuchi: 4, time: 4000 },
-    { name: "8級", digits: 1, kuchi: 5, time: 4000 },
-    { name: "7級", digits: 2, kuchi: 3, time: 4000 },
-    { name: "6級", digits: 2, kuchi: 4, time: 4000 },
-    { name: "5級", digits: 2, kuchi: 5, time: 5000 },
-    { name: "4級", digits: 2, kuchi: 7, time: 6000 },
-    { name: "3級", digits: 2, kuchi: 10, time: 7000 },
-    { name: "2級", digits: 2, kuchi: 15, time: 8000 },
-    { name: "1級", digits: 3, kuchi: 10, time: 8000 },
-    { name: "初段", digits: 3, kuchi: 15, time: 7000 },
-    { name: "三段", digits: 3, kuchi: 15, time: 5000 },
-    { name: "五段", digits: 3, kuchi: 15, time: 3500 },
-    { name: "七段", digits: 3, kuchi: 15, time: 2500 },
-    { name: "十段", digits: 3, kuchi: 15, time: 1600 }
-  ];
+  // ==================== OFFICIAL ASSOCIATIONS & EXAMINATION STANDARDS ====================
+  const ASSOCIATIONS = {
+    flash_assoc: {
+      id: 'flash_assoc',
+      name: '一般社団法人 日本フラッシュ暗算検定協会',
+      shortName: '日フ検協',
+      tag: '公式検定基準',
+      desc: 'フラッシュ暗算創始者（宮本裕史）考案の公式検定基準。20級〜二十段まで網羅。',
+      rules: [
+        { name: "20級", digits: 1, kuchi: 2, time: 5000 },
+        { name: "15級", digits: 1, kuchi: 3, time: 4500 },
+        { name: "10級", digits: 2, kuchi: 2, time: 4000 },
+        { name: "9級", digits: 2, kuchi: 3, time: 6000 },
+        { name: "8級", digits: 2, kuchi: 4, time: 7000 },
+        { name: "7級", digits: 2, kuchi: 5, time: 8000 },
+        { name: "6級", digits: 2, kuchi: 6, time: 9000 },
+        { name: "5級", digits: 2, kuchi: 7, time: 10000 },
+        { name: "4級", digits: 2, kuchi: 8, time: 11000 },
+        { name: "3級", digits: 2, kuchi: 10, time: 12000 },
+        { name: "2級", digits: 2, kuchi: 12, time: 12000 },
+        { name: "1級", digits: 2, kuchi: 15, time: 13000 },
+        { name: "初段", digits: 2, kuchi: 15, time: 10000 },
+        { name: "二段", digits: 3, kuchi: 4, time: 4000 },
+        { name: "三段", digits: 3, kuchi: 6, time: 5000 },
+        { name: "四段", digits: 3, kuchi: 8, time: 6000 },
+        { name: "五段", digits: 3, kuchi: 10, time: 7000 },
+        { name: "六段", digits: 3, kuchi: 12, time: 8000 },
+        { name: "七段", digits: 3, kuchi: 15, time: 8000 },
+        { name: "八段", digits: 3, kuchi: 15, time: 6000 },
+        { name: "九段", digits: 3, kuchi: 15, time: 4500 },
+        { name: "十段", digits: 3, kuchi: 15, time: 3000 },
+        { name: "二十段", digits: 3, kuchi: 15, time: 1500 }
+      ]
+    },
+    zenjuren: {
+      id: 'zenjuren',
+      name: '公益社団法人 全国珠算教育連盟 (全珠連)',
+      shortName: '全珠連',
+      tag: '連盟公式規格',
+      desc: '全国珠算教育連盟が推奨するフラッシュ暗算ネット検定の基準。10級〜十段。',
+      rules: [
+        { name: "10級", digits: 1, kuchi: 3, time: 4000 },
+        { name: "9級", digits: 1, kuchi: 4, time: 5000 },
+        { name: "8級", digits: 1, kuchi: 5, time: 6000 },
+        { name: "7級", digits: 1, kuchi: 6, time: 6000 },
+        { name: "6級", digits: 2, kuchi: 3, time: 4000 },
+        { name: "5級", digits: 2, kuchi: 4, time: 5000 },
+        { name: "4級", digits: 2, kuchi: 5, time: 6000 },
+        { name: "3級", digits: 2, kuchi: 7, time: 7000 },
+        { name: "2級", digits: 2, kuchi: 10, time: 9000 },
+        { name: "1級", digits: 2, kuchi: 15, time: 12000 },
+        { name: "初段", digits: 2, kuchi: 15, time: 9000 },
+        { name: "二段", digits: 3, kuchi: 5, time: 5000 },
+        { name: "三段", digits: 3, kuchi: 7, time: 6000 },
+        { name: "四段", digits: 3, kuchi: 10, time: 8000 },
+        { name: "五段", digits: 3, kuchi: 12, time: 8000 },
+        { name: "六段", digits: 3, kuchi: 15, time: 8000 },
+        { name: "七段", digits: 3, kuchi: 15, time: 6000 },
+        { name: "八段", digits: 3, kuchi: 15, time: 5000 },
+        { name: "九段", digits: 3, kuchi: 15, time: 4000 },
+        { name: "十段", digits: 3, kuchi: 15, time: 3000 }
+      ]
+    },
+    nichijuren: {
+      id: 'nichijuren',
+      name: '日本珠算連盟 (日珠連)',
+      shortName: '日珠連',
+      tag: '連盟公式検定',
+      desc: '日本珠算連盟のフラッシュ暗算検定基準。高段位は10口の超スピード競技対応。',
+      rules: [
+        { name: "10級", digits: 1, kuchi: 4, time: 4000 },
+        { name: "9級", digits: 1, kuchi: 6, time: 6000 },
+        { name: "8級", digits: 1, kuchi: 8, time: 8000 },
+        { name: "7級", digits: 1, kuchi: 10, time: 10000 },
+        { name: "6級", digits: 2, kuchi: 3, time: 3000 },
+        { name: "5級", digits: 2, kuchi: 4, time: 4000 },
+        { name: "4級", digits: 2, kuchi: 5, time: 5000 },
+        { name: "3級", digits: 2, kuchi: 7, time: 7000 },
+        { name: "2級", digits: 2, kuchi: 10, time: 10000 },
+        { name: "1級", digits: 3, kuchi: 5, time: 5000 },
+        { name: "初段", digits: 3, kuchi: 7, time: 7000 },
+        { name: "弐段", digits: 3, kuchi: 10, time: 10000 },
+        { name: "参段", digits: 3, kuchi: 10, time: 7000 },
+        { name: "四段", digits: 3, kuchi: 10, time: 5000 },
+        { name: "五段", digits: 3, kuchi: 10, time: 4500 },
+        { name: "六段", digits: 3, kuchi: 10, time: 4000 },
+        { name: "七段", digits: 3, kuchi: 10, time: 3500 },
+        { name: "八段", digits: 3, kuchi: 10, time: 3000 },
+        { name: "九段", digits: 3, kuchi: 15, time: 4000 },
+        { name: "十段", digits: 3, kuchi: 15, time: 3000 }
+      ]
+    }
+  };
+
+  let currentAssocKey = 'flash_assoc';
+  let activeRule = ASSOCIATIONS.flash_assoc.rules[6]; // 6級
+  let isFlashingNumbers = false; // Flag: True during active problem number flashing (guards against visual overlays)
 
   const MACHINES = [
     { id: 'falcon', name: 'BLUE FALCON', rarity: 'STANDARD', spriteKey: 'blue', desc: 'バランス型・初期配備マシン', color: '#0ea5e9', topSpeed: 1800, accel: 1.0, nitroBonus: 1.0, unlocked: true },
@@ -591,7 +765,6 @@
   const nitroTimerBar = document.getElementById('nitroTimerBar');
   const shieldIndicator = document.getElementById('shieldIndicator');
 
-  let activeRule = kyuData[4];
   let isPlaying = false, isFirstRound = true, isAutoPlay = false, isGoal = false;
   let speed = 120, targetSpeed = 120;
   let numbers = [], expectedSum = 0, flashIndex = 0, playerInput = "";
@@ -811,9 +984,11 @@
             if (r.isPlayer && !dp.hitByPlayer) {
               dp.hitByPlayer = true;
               playDashPlateSound();
-              screenFlash('rgba(250, 204, 21, 0.6)');
-              feedbackEl.innerHTML = '<div class="nitro-text italic" style="color:#fde047;">⚡ DASH PLATE! +400 KM/H</div>';
-              setTimeout(() => { if(feedbackEl.textContent.includes('DASH')) feedbackEl.innerHTML = ''; }, 700);
+              if (!isFlashingNumbers) {
+                screenFlash('rgba(250, 204, 21, 0.5)');
+                feedbackEl.innerHTML = '<div class="nitro-text italic" style="color:#fde047;">⚡ DASH PLATE! +400 KM/H</div>';
+                setTimeout(() => { if(feedbackEl.textContent.includes('DASH')) feedbackEl.innerHTML = ''; }, 700);
+              }
             }
           }
         });
@@ -1060,8 +1235,8 @@
       c.fillText(racer.name, 0, -48 * scale);
     }
 
-    // CP Status Bubble
-    if (racer.statusTimer > 0 && racer.statusText) {
+    // CP Status Bubble (Suppressed during active number calculation)
+    if (!isFlashingNumbers && racer.statusTimer > 0 && racer.statusText) {
       const isMiss = racer.statusText.includes('MISS');
       c.fillStyle = isMiss ? '#ef4444' : (racer.statusText.includes('NITRO') ? '#38bdf8' : '#facc15');
       c.font = `bold ${Math.max(10, Math.floor(11 * scale))}px Orbitron, sans-serif`;
@@ -1076,6 +1251,7 @@
   }
 
   function spawnSparks(racer) {
+    if (isFlashingNumbers) return;
     const distDiff = racer.dist - racers[0].dist;
     let t = 0.70 - (distDiff * 0.0055);
     t = Math.max(0.12, Math.min(0.92, t));
@@ -1099,6 +1275,7 @@
   }
 
   function spawnContactSparks(normLat, trackDist) {
+    if (isFlashingNumbers) return;
     const distDiff = trackDist - racers[0].dist;
     let t = 0.70 - (distDiff * 0.0055);
     t = Math.max(0.12, Math.min(0.92, t));
@@ -1142,12 +1319,14 @@
       currentStageIndex = nextStage;
       const st = STAGES[currentStageIndex];
       zoneBadge.textContent = `ZONE ${st.id}`;
-      screenFlash('rgba(255, 255, 255, 1)');
+      screenFlash('rgba(255, 255, 255, 0.7)');
       playNitroSound();
 
       feedbackEl.innerHTML = `<div class="warp-banner italic">${st.name}<br><span class="text-xs text-white">${st.subtitle}</span></div>`;
-      setTimeout(() => { if (feedbackEl.textContent.includes('ZONE')) feedbackEl.innerHTML = ''; }, 1600);
+      setTimeout(() => { if (feedbackEl.textContent.includes('ZONE')) feedbackEl.innerHTML = ''; }, 1100);
+      return true;
     }
+    return false;
   }
 
   // ==================== GARAGE & INVENTORY ====================
@@ -1270,17 +1449,146 @@
     setTimeout(() => { if (feedbackEl.textContent.includes('READY') || feedbackEl.textContent.includes('WARP')) feedbackEl.innerHTML = ''; }, 800);
   };
 
-  // ==================== RACE FLOW & MATH LOOP ====================
-  diffSlider.oninput = () => {
-    const val = parseInt(diffSlider.value);
-    activeRule = kyuData[val];
+  // ==================== OFFICIAL ASSOCIATION & LEVEL CONTROLLER ====================
+  function updateRuleDisplay() {
+    const assoc = ASSOCIATIONS[currentAssocKey];
     diffDisplay.textContent = activeRule.name;
     ingameLevel.textContent = activeRule.name;
-    document.getElementById('ruleDigits').textContent = `DIGITS: ${activeRule.digits}`;
-    document.getElementById('ruleKuchi').textContent = `KUCHI: ${activeRule.kuchi}`;
-    document.getElementById('ruleTime').textContent = `TIME: ${(activeRule.time/1000).toFixed(1)}s`;
+    const tagEl = document.getElementById('ingameAssocTag');
+    if (tagEl) tagEl.textContent = assoc.shortName;
+    document.getElementById('ruleDigits').textContent = `${activeRule.digits}桁`;
+    document.getElementById('ruleKuchi').textContent = `${activeRule.kuchi}口`;
+    document.getElementById('ruleTime').textContent = `${(activeRule.time / 1000).toFixed(1)}s`;
+    
+    // Per number speed
+    const perNum = (activeRule.time / activeRule.kuchi / 1000).toFixed(2);
+    document.getElementById('ruleSpeed').textContent = `${perNum}s / 口`;
+  }
+
+  window.selectAssociation = (assocKey) => {
+    if (!ASSOCIATIONS[assocKey]) return;
+    currentAssocKey = assocKey;
+    const assoc = ASSOCIATIONS[currentAssocKey];
+
+    // Update Tab Button Styles
+    ['flash_assoc', 'zenjuren', 'nichijuren'].forEach(k => {
+      const btn = document.getElementById(k === 'flash_assoc' ? 'assocBtn_flash' : (k === 'zenjuren' ? 'assocBtn_zenju' : 'assocBtn_nichiju'));
+      if (btn) {
+        if (k === currentAssocKey) {
+          btn.className = 'py-1.5 px-1 rounded-lg text-[10px] sm:text-[11px] font-black tracking-tighter transition-all bg-pink-600 text-white shadow-[0_0_12px_rgba(236,72,153,0.6)]';
+        } else {
+          btn.className = 'py-1.5 px-1 rounded-lg text-[10px] sm:text-[11px] font-black tracking-tighter transition-all text-slate-400 hover:text-white';
+        }
+      }
+    });
+
+    document.getElementById('assocFullName').textContent = assoc.name;
+    document.getElementById('assocBadge').textContent = assoc.tag;
+    const modalTitle = document.getElementById('modalAssocTitle');
+    if (modalTitle) modalTitle.textContent = assoc.name;
+
+    // Update Slider Bounds
+    diffSlider.min = 0;
+    diffSlider.max = assoc.rules.length - 1;
+    document.getElementById('sliderMinLabel').textContent = assoc.rules[0].name;
+    document.getElementById('sliderMaxLabel').textContent = assoc.rules[assoc.rules.length - 1].name;
+
+    // Try to preserve current grade if available, else pick index ~ 6 (approx 6級)
+    let matchedIdx = assoc.rules.findIndex(r => r.name === activeRule.name);
+    if (matchedIdx === -1) {
+      matchedIdx = Math.min(6, assoc.rules.length - 1);
+    }
+    diffSlider.value = matchedIdx;
+    activeRule = assoc.rules[matchedIdx];
+
+    updateRuleDisplay();
+    playTap();
+  };
+
+  diffSlider.oninput = () => {
+    const val = parseInt(diffSlider.value, 10);
+    const rules = ASSOCIATIONS[currentAssocKey].rules;
+    activeRule = rules[Math.max(0, Math.min(rules.length - 1, val))];
+    updateRuleDisplay();
   };
   diffSlider.oninput();
+
+  // Level Selection Modal Functions
+  let currentModalFilter = 'all';
+  window.openLevelModal = () => {
+    const modal = document.getElementById('levelSelectModal');
+    modal.classList.remove('hidden-force');
+    renderLevelCards();
+  };
+
+  window.closeLevelModal = () => {
+    const modal = document.getElementById('levelSelectModal');
+    modal.classList.add('hidden-force');
+  };
+
+  window.filterLevelModal = (filterType) => {
+    currentModalFilter = filterType;
+    ['all', 'kyu', 'dan'].forEach(f => {
+      const btn = document.getElementById(`levelTab${f.charAt(0).toUpperCase() + f.slice(1)}`);
+      if (btn) {
+        if (f === filterType) {
+          btn.className = 'flex-1 py-1.5 rounded-xl text-xs font-black bg-pink-600 text-white border border-pink-400';
+        } else {
+          btn.className = 'flex-1 py-1.5 rounded-xl text-xs font-black bg-slate-800 text-slate-300 border border-slate-700';
+        }
+      }
+    });
+    renderLevelCards();
+  };
+
+  function renderLevelCards() {
+    const grid = document.getElementById('levelCardsGrid');
+    if (!grid) return;
+    grid.innerHTML = '';
+    const rules = ASSOCIATIONS[currentAssocKey].rules;
+
+    rules.forEach((r, idx) => {
+      const isDan = r.name.includes('段');
+      if (currentModalFilter === 'kyu' && isDan) return;
+      if (currentModalFilter === 'dan' && !isDan) return;
+
+      const isCurrent = activeRule.name === r.name;
+      const card = document.createElement('button');
+      card.onclick = () => {
+        selectLevelIndex(idx);
+        closeLevelModal();
+      };
+      card.className = `glass-panel p-2.5 rounded-xl border text-left transition-all active:scale-95 ${
+        isCurrent
+          ? 'border-pink-500 bg-pink-950/60 shadow-[0_0_15px_rgba(236,72,153,0.5)]'
+          : 'border-slate-700/80 hover:border-cyan-500/60 bg-slate-900/80'
+      }`;
+
+      const perSec = (r.time / r.kuchi / 1000).toFixed(2);
+      card.innerHTML = `
+        <div class="flex justify-between items-center mb-1">
+          <span class="text-sm font-black ${isDan ? 'text-yellow-400' : 'text-white'}">${r.name}</span>
+          <span class="text-[9px] px-1.5 py-0.5 rounded font-bold ${isDan ? 'bg-yellow-950 text-yellow-300 border border-yellow-600' : 'bg-slate-800 text-cyan-300 border border-slate-600'}">
+            ${isDan ? '段位' : '級位'}
+          </span>
+        </div>
+        <div class="text-[10px] text-slate-300 font-bold flex justify-between">
+          <span>${r.digits}桁 / ${r.kuchi}口</span>
+          <span class="text-cyan-300">${(r.time / 1000).toFixed(1)}s</span>
+        </div>
+        <div class="text-[9px] text-slate-400 mt-1">1口: ${perSec}秒</div>
+      `;
+      grid.appendChild(card);
+    });
+  }
+
+  window.selectLevelIndex = (idx) => {
+    const rules = ASSOCIATIONS[currentAssocKey].rules;
+    activeRule = rules[idx];
+    diffSlider.value = idx;
+    updateRuleDisplay();
+    playTap();
+  };
 
   autoPlayToggle.addEventListener('change', (e) => { isAutoPlay = e.target.checked; });
 
@@ -1288,12 +1596,16 @@
     initAudio();
     lobbyScreen.classList.add('hidden-force');
     gameScreen.classList.remove('hidden-force');
+    
+    const assoc = ASSOCIATIONS[currentAssocKey];
+    const tagEl = document.getElementById('ingameAssocTag');
+    if (tagEl) tagEl.textContent = assoc.shortName;
     ingameLevel.textContent = activeRule.name;
     
     if(isAutoPlay) autoPlayIndicator.classList.remove('hidden-force');
     else autoPlayIndicator.classList.add('hidden-force');
     
-    isPlaying = true; isFirstRound = true; isGoal = false;
+    isPlaying = true; isFirstRound = true; isGoal = false; isFlashingNumbers = false;
     speed = 120; targetSpeed = 120; 
     currentProblem = 1; combo = 0;
     trackDistance = 0;
@@ -1331,6 +1643,7 @@
 
   window.endRace = (isClear) => {
     isPlaying = false;
+    isFlashingNumbers = false;
     gameScreen.classList.add('hidden-force');
     inputArea.classList.add('hidden-force');
     equationEl.innerHTML = ''; feedbackEl.innerHTML = '';
@@ -1346,6 +1659,22 @@
       document.getElementById('statNitros').textContent = `${nitroTriggers}回`;
       document.getElementById('statAccuracy').textContent = `${accuracy}%`;
       document.getElementById('statCombo').textContent = maxCombo;
+
+      // Official Association Certificate Result
+      const assoc = ASSOCIATIONS[currentAssocKey];
+      document.getElementById('resultAssocName').textContent = assoc.name;
+      document.getElementById('resultRuleName').textContent = activeRule.name;
+      document.getElementById('resultScoreText').textContent = `10問中 ${correctAnswers}問正解 (${correctAnswers * 10}点)`;
+      
+      const isPassed = correctAnswers >= 7; // Official standard: 70%+
+      const passBadge = document.getElementById('resultPassBadge');
+      if (isPassed) {
+        passBadge.textContent = "合格 CERTIFIED!";
+        passBadge.className = "px-3 py-1 rounded-xl text-xs font-black bg-emerald-500 text-white shadow-[0_0_15px_#10b981]";
+      } else {
+        passBadge.textContent = `不合格 (あと${7 - correctAnswers}問)`;
+        passBadge.className = "px-3 py-1 rounded-xl text-xs font-black bg-red-600 text-white shadow-[0_0_12px_#ef4444]";
+      }
       
       const sorted = [...racers].sort((a,b) => b.dist - a.dist);
       const finalRank = sorted.findIndex(r => r.isPlayer) + 1;
@@ -1400,7 +1729,9 @@
     inputArea.classList.add('hidden-force');
     feedbackEl.innerHTML = '';
     progressText.textContent = `LAP ${currentProblem} / ${totalProblems}`;
-    updateStageZone();
+    
+    // Check stage change before flashing numbers
+    const stageChanged = updateStageZone();
 
     numbers = []; expectedSum = 0;
     const { digits, kuchi } = activeRule;
@@ -1412,14 +1743,30 @@
     }
     
     if (isFirstRound) {
-      equationEl.innerHTML = '<span class="text-3xl text-slate-400 font-black tracking-widest italic">GET READY</span>';
-      setTimeout(() => { if(isPlaying) equationEl.innerHTML = '<span class="text-4xl text-pink-400 font-black tracking-widest scale-125 transition-transform italic">BOOST!</span>'; }, 500);
+      equationEl.innerHTML = '<span class="text-3xl text-slate-300 font-black tracking-widest italic">GET READY</span>';
+      setTimeout(() => { if(isPlaying) equationEl.innerHTML = '<span class="text-4xl text-cyan-400 font-black tracking-widest scale-125 transition-transform italic">START!</span>'; }, 500);
       setTimeout(() => { 
         if(!isPlaying) return;
-        isFirstRound = false; flashIndex = 0; equationEl.innerHTML = ''; flashNumber(); 
+        isFirstRound = false; flashIndex = 0; equationEl.innerHTML = ''; 
+        isFlashingNumbers = true;
+        flashNumber(); 
       }, 1000);
+    } else if (stageChanged) {
+      // Stage changed: let stage warp banner finish on the track before numbers start!
+      setTimeout(() => {
+        if (!isPlaying) return;
+        flashIndex = 0; equationEl.innerHTML = '';
+        feedbackEl.innerHTML = '';
+        isFlashingNumbers = true;
+        flashNumber();
+      }, 1200);
     } else {
-      flashIndex = 0; equationEl.innerHTML = ''; flashNumber(); 
+      setTimeout(() => {
+        if (!isPlaying) return;
+        flashIndex = 0; equationEl.innerHTML = '';
+        isFlashingNumbers = true;
+        flashNumber();
+      }, 350);
     }
   }
 
@@ -1438,18 +1785,27 @@
   }
 
   function flashNumber() {
-    if (!isPlaying) return;
+    if (!isPlaying) {
+      isFlashingNumbers = false;
+      return;
+    }
     let speedMs = activeRule.time / activeRule.kuchi; 
     if (activeWarpUsed) { speedMs *= 1.5; activeWarpUsed = false; }
     
     if (flashIndex < numbers.length) {
+      isFlashingNumbers = true;
       equationEl.innerHTML = `<span class="flash-num italic">${numbers[flashIndex]}</span>`;
       setTimeout(() => {
-        if (!isPlaying) return;
+        if (!isPlaying) {
+          isFlashingNumbers = false;
+          return;
+        }
         equationEl.innerHTML = ''; flashIndex++;
         setTimeout(() => flashNumber(), speedMs * 0.25);
       }, speedMs * 0.75);
     } else {
+      isFlashingNumbers = false;
+      equationEl.innerHTML = '';
       playerInput = ""; answerDisplay.textContent = "";
       inputArea.classList.remove('hidden-force');
       inputArea.classList.add('animate-slide-up');
