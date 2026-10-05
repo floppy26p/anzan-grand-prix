@@ -1,2636 +1,613 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Anzan Grand Prix - 暗算グランプリ</title>
-  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@700;900&family=Orbitron:wght@700;900&display=swap');
-    
-    html, body {
-      margin: 0; padding: 0; width: 100%; height: 100%; height: 100dvh;
-      overflow: hidden; background: #020617;
-      display: flex; justify-content: center; align-items: center;
-      font-family: 'M PLUS Rounded 1c', 'Orbitron', sans-serif;
-      touch-action: manipulation; overscroll-behavior: none;
-      -webkit-user-select: none; user-select: none;
-    }
-    
-    * {
-      scrollbar-width: none !important;
-      -ms-overflow-style: none !important;
-    }
-    *::-webkit-scrollbar {
-      display: none !important; width: 0 !important; height: 0 !important;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Flash Anzan - Army Defense Prototype</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Noto+Sans+JP:wght@400;700;900&display=swap');
 
-    .font-num {
-      font-family: 'Orbitron', sans-serif;
-    }
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #0f172a;
+            color: white;
+            font-family: 'Noto Sans JP', sans-serif;
+            touch-action: none;
+        }
 
-    .mobile-frame {
-      width: 100%; max-width: 440px; height: 100%; height: 100dvh;
-      background: #020617; position: relative; overflow: hidden;
-      display: flex; flex-direction: column; justify-content: space-between;
-    }
+        .font-orbitron { font-family: 'Orbitron', sans-serif; }
 
-    @media (min-width: 640px) {
-      .mobile-frame {
-        height: min(92dvh, 880px);
-        border-radius: 32px;
-        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 1), inset 0 0 0 2px #1e293b;
-      }
-    }
+        #gameCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 1;
+        }
 
-    .glass-panel {
-      background: rgba(15, 23, 42, 0.88); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-      border: 1px solid rgba(56, 189, 248, 0.3); box-shadow: 0 4px 25px rgba(0, 0, 0, 0.8);
-    }
+        #ui-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 10;
+            pointer-events: none; /* Let clicks pass through where there is no UI */
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
 
-    .btn-neon {
-      background: linear-gradient(135deg, #0ea5e9, #6366f1);
-      box-shadow: 0 0 20px rgba(14, 165, 233, 0.7), inset 0 0 10px rgba(255,255,255,0.4);
-      border: 1px solid #bae6fd; transition: transform 0.1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    }
-    .btn-neon:active { transform: scale(0.92); box-shadow: 0 0 10px rgba(14, 165, 233, 0.9); }
+        /* Screens */
+        .screen {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(15, 23, 42, 0.9);
+            backdrop-filter: blur(5px);
+            transition: opacity 0.3s ease;
+        }
 
-    /* Flash Numbers & Feedback */
-    .flash-num {
-      font-family: 'Orbitron', 'M PLUS Rounded 1c', sans-serif;
-      font-size: clamp(3.8rem, 16vw, 6.4rem);
-      color: #ffffff;
-      font-weight: 900;
-      line-height: 1;
-      text-shadow: 0 4px 18px rgba(0, 0, 0, 0.95), 0 0 30px #0284c7, 0 0 60px #38bdf8;
-      animation: numPop 0.08s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-      user-select: none;
-      pointer-events: none;
-    }
-    @keyframes numPop {
-      0% { transform: scale(0.3); opacity: 0; filter: blur(10px); }
-      100% { transform: scale(1); opacity: 1; filter: blur(0); }
-    }
+        .hidden { opacity: 0; pointer-events: none; display: none !important; }
 
-    .impact-text {
-      font-size: 2.2rem; line-height: 1.1; font-weight: 900;
-      background: linear-gradient(to bottom, #fff, #4ade80);
-      -webkit-background-clip: text; color: transparent;
-      filter: drop-shadow(0 0 10px #4ade80) drop-shadow(0 0 25px #22c55e);
-      animation: slamText 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-    }
-    .nitro-text {
-      font-size: 2.3rem; line-height: 1.1; font-weight: 900;
-      background: linear-gradient(to bottom, #fff, #38bdf8, #818cf8);
-      -webkit-background-clip: text; color: transparent;
-      filter: drop-shadow(0 0 15px #38bdf8) drop-shadow(0 0 35px #6366f1);
-      animation: slamText 0.22s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-    }
-    .warp-banner {
-      font-size: 2.0rem; line-height: 1.1; font-weight: 900;
-      background: linear-gradient(to bottom, #fff, #f472b6, #c084fc);
-      -webkit-background-clip: text; color: transparent;
-      filter: drop-shadow(0 0 15px #f472b6) drop-shadow(0 0 40px #c084fc);
-      animation: slamText 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-    }
-    @keyframes slamText {
-      0% { transform: scale(3) rotate(10deg); opacity: 0; }
-      50% { transform: scale(0.95) rotate(-3deg); opacity: 1; }
-      100% { transform: scale(1.1) rotate(0deg); opacity: 1; }
-    }
+        /* Numpad */
+        #numpad-container {
+            pointer-events: auto;
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(10px);
+            border-top: 2px solid #3b82f6;
+            padding: 1rem;
+            padding-bottom: env(safe-area-inset-bottom, 1rem);
+            border-radius: 20px 20px 0 0;
+            box-shadow: 0 -10px 30px rgba(59, 130, 246, 0.2);
+        }
 
-    /* Steering Buttons */
-    .steer-btn {
-      background: rgba(15, 23, 42, 0.82);
-      backdrop-filter: blur(8px);
-      border: 2px solid rgba(56, 189, 248, 0.5);
-      border-radius: 18px;
-      color: #38bdf8;
-      font-weight: 900;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6), inset 0 0 10px rgba(56, 189, 248, 0.2);
-      touch-action: none;
-      transition: all 0.08s ease;
-      user-select: none;
-    }
-    .steer-btn:active, .steer-btn.active-touch {
-      background: rgba(14, 165, 233, 0.55);
-      border-color: #38bdf8;
-      transform: scale(0.92);
-      box-shadow: 0 0 20px rgba(56, 189, 248, 0.9);
-      color: #ffffff;
-    }
+        .numpad-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+            max-width: 400px;
+            margin: 0 auto;
+        }
 
-    /* Official Certificate */
-    .cert-frame {
-      border: 4px double #eab308;
-      box-shadow: 0 0 25px rgba(234, 179, 8, 0.3), inset 0 0 30px rgba(234, 179, 8, 0.1);
-      background: linear-gradient(135deg, rgba(15, 23, 42, 0.96), rgba(30, 27, 75, 0.96));
-    }
-    .cert-seal {
-      width: 64px; height: 64px;
-      border: 3px double #ef4444; border-radius: 50%;
-      color: #ef4444; font-weight: 900; font-size: 11px;
-      display: flex; align-items: center; justify-content: center; text-align: center;
-      box-shadow: 0 0 12px rgba(239, 68, 68, 0.5);
-      transform: rotate(-12deg);
-    }
+        .num-btn {
+            background: rgba(59, 130, 246, 0.2);
+            border: 1px solid rgba(59, 130, 246, 0.5);
+            color: #60a5fa;
+            font-size: 1.5rem;
+            font-weight: bold;
+            padding: 1rem 0;
+            border-radius: 12px;
+            transition: all 0.1s;
+        }
 
-    /* Mode Selection Cards */
-    .mode-card-active-gp {
-      border: 2px solid #ec4899 !important;
-      background: linear-gradient(135deg, rgba(236, 72, 153, 0.3), rgba(99, 102, 241, 0.25)) !important;
-      box-shadow: 0 0 20px rgba(236, 72, 153, 0.5) !important;
-      opacity: 1 !important;
-    }
-    .mode-card-active-exam {
-      border: 2px solid #06b6d4 !important;
-      background: linear-gradient(135deg, rgba(6, 182, 212, 0.3), rgba(16, 185, 129, 0.25)) !important;
-      box-shadow: 0 0 20px rgba(6, 182, 212, 0.5) !important;
-      opacity: 1 !important;
-    }
-    .mode-card-inactive {
-      border: 1px solid #334155 !important;
-      background: rgba(15, 23, 42, 0.75) !important;
-      box-shadow: none !important;
-      opacity: 0.6 !important;
-    }
-    .mode-card-inactive:hover {
-      opacity: 0.9 !important;
-      border-color: #64748b !important;
-    }
+        .num-btn:active {
+            background: rgba(59, 130, 246, 0.6);
+            transform: scale(0.95);
+            color: white;
+        }
 
-    /* Numpad */
-    .numpad-btn {
-      font-family: 'Orbitron', 'M PLUS Rounded 1c', sans-serif;
-      background: rgba(15, 23, 42, 0.78); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 12px;
-      color: white; font-size: 1.8rem; height: 3.4rem; font-weight: 900;
-      display: flex; align-items: center; justify-content: center;
-      box-shadow: inset 0 2px 8px rgba(56, 189, 248, 0.15), 0 4px 12px rgba(0,0,0,0.5);
-      transition: transform 0.05s;
-    }
-    .numpad-btn:active { background: rgba(56, 189, 248, 0.4); transform: scale(0.9); }
-    
-    .hidden-force { display: none !important; }
+        .action-btn {
+            background: rgba(16, 185, 129, 0.2);
+            border-color: rgba(16, 185, 129, 0.5);
+            color: #34d399;
+        }
+        .action-btn:active { background: rgba(16, 185, 129, 0.6); }
 
-    .toggle-checkbox:checked { right: 0; border-color: #f472b6; }
-    .toggle-checkbox:checked + .toggle-label { background-color: #ec4899; }
-  </style>
+        .del-btn {
+            background: rgba(244, 63, 94, 0.2);
+            border-color: rgba(244, 63, 94, 0.5);
+            color: #fb7185;
+        }
+        .del-btn:active { background: rgba(244, 63, 94, 0.6); }
+
+        /* Flashing Number Display */
+        #flash-display {
+            font-size: 8rem;
+            font-weight: 900;
+            text-shadow: 0 0 30px rgba(59, 130, 246, 0.8), 0 0 10px white;
+            color: white;
+            position: absolute;
+            top: 40%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 5;
+            pointer-events: none;
+            text-align: center;
+        }
+
+        #player-input-display {
+            font-size: 3rem;
+            text-align: center;
+            margin-bottom: 0.5rem;
+            min-height: 4.5rem;
+            color: #60a5fa;
+            letter-spacing: 2px;
+            font-weight: bold;
+        }
+    </style>
 </head>
 <body>
 
-<div class="mobile-frame" id="gameFrame">
+    <!-- Game Canvas -->
+    <canvas id="gameCanvas"></canvas>
 
-  <!-- ==================== LOBBY SCREEN ==================== -->
-  <div id="lobbyScreen" class="absolute inset-0 z-50 flex flex-col justify-between p-3.5 sm:p-5 bg-[#020617] overflow-y-auto" style="padding-bottom: max(1rem, env(safe-area-inset-bottom)); padding-top: max(1rem, env(safe-area-inset-top));">
-    <div class="absolute inset-0 opacity-30 pointer-events-none" style="background-image: radial-gradient(circle at 50% 30%, #38bdf8 0%, transparent 65%);"></div>
+    <!-- Flash Number Display -->
+    <div id="flash-display" class="font-orbitron hidden"></div>
 
-    <!-- Header -->
-    <div class="relative z-10 flex justify-between items-center">
-      <div class="flex items-center gap-1.5 sm:gap-2">
-        <div class="glass-panel px-2.5 sm:px-3 py-1 rounded-full flex items-center gap-1 border-yellow-500/50">
-          <span class="text-sm">🏆</span>
-          <span class="text-yellow-400 font-black text-[11px] sm:text-xs tracking-wider" id="playerPoints">1,250 PTS</span>
-        </div>
-        <div class="glass-panel px-2.5 sm:px-3 py-1 rounded-full flex items-center gap-1 border-cyan-500/50">
-          <span class="text-sm">💎</span>
-          <span class="text-cyan-400 font-black text-[11px] sm:text-xs tracking-wider" id="playerCores">120 コア</span>
-        </div>
-      </div>
-      <button onclick="openGarage()" class="btn-neon px-3 py-1 rounded-full text-xs font-black shadow-lg flex items-center gap-1">
-        ⚙️ ガレージ
-      </button>
-    </div>
-
-    <!-- Title Section -->
-    <div class="relative z-10 text-center my-1 sm:my-2">
-      <div class="text-[9px] sm:text-[10px] text-pink-400 tracking-[0.3em] font-black uppercase mb-0.5">⚡ サイバーレース × フラッシュ暗算</div>
-      <h1 class="text-2xl sm:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-500 to-pink-500 drop-shadow-[0_0_15px_rgba(236,72,153,0.8)] italic leading-tight">
-        あんざんグランプリ
-      </h1>
-      <div class="mt-1 inline-flex items-center gap-1.5 glass-panel px-3 py-0.5 rounded-full border-blue-400/40">
-        <span class="text-[9px] text-slate-300 font-bold">マシン:</span>
-        <span id="lobbyMachineName" class="text-[11px] text-cyan-300 font-black">ブルーファルコン</span>
-      </div>
-    </div>
-    
-    <!-- Mode & Settings Loadout -->
-    <div class="relative z-10 space-y-2">
-      
-      <!-- MODE SELECTOR (グランプリ vs けんてい) -->
-      <div class="glass-panel rounded-2xl p-2.5 sm:p-3 border-cyan-400/50 shadow-[0_0_20px_rgba(6,182,212,0.3)]">
-        <div class="text-[11px] text-yellow-300 font-black mb-2 flex items-center justify-between">
-          <span class="flex items-center gap-1.5">
-            <span class="animate-bounce">👉</span>
-            <span>モードをえらんでね</span>
-          </span>
-          <span id="modeActiveBadge" class="text-[9px] px-2 py-0.5 rounded-full bg-pink-900 text-pink-200 border border-pink-400 font-black">🏎️ グランプリ中</span>
-        </div>
-        <div class="grid grid-cols-2 gap-2">
-          <!-- Button 1: Grand Prix -->
-          <button id="modeBtnGrandPrix" onclick="selectGameMode('grandprix')" class="p-2.5 rounded-xl mode-card-active-gp text-left active:scale-95 transition-all cursor-pointer">
-            <div class="flex items-start justify-between">
-              <span class="text-2xl">🏎️</span>
-              <span id="modeStatusGp" class="text-[9px] px-1.5 py-0.5 rounded-full font-black bg-pink-600 text-white shadow-[0_0_8px_#ec4899]">● えらび中</span>
-            </div>
-            <div class="mt-1">
-              <div class="text-xs sm:text-sm font-black text-white">グランプリ</div>
-              <div class="text-[9px] text-pink-300 font-bold leading-tight">レース & ❓アイテム</div>
-            </div>
-          </button>
-          <!-- Button 2: Certification Exam -->
-          <button id="modeBtnExam" onclick="selectGameMode('exam')" class="p-2.5 rounded-xl mode-card-inactive text-left active:scale-95 transition-all cursor-pointer">
-            <div class="flex items-start justify-between">
-              <span class="text-2xl">📝</span>
-              <span id="modeStatusExam" class="text-[9px] px-1.5 py-0.5 rounded-full font-bold bg-slate-800 text-slate-400">タップで選択</span>
-            </div>
-            <div class="mt-1">
-              <div class="text-xs sm:text-sm font-black text-white">けんてい</div>
-              <div class="text-[9px] text-cyan-300 font-bold leading-tight">コースなし 10問テスト</div>
-            </div>
-          </button>
-        </div>
-        <div id="modeDescText" class="text-[10px] text-slate-200 mt-2 bg-slate-950/80 p-2 rounded-xl border border-slate-700/60 leading-normal flex items-center gap-1.5">
-          <span>🏎️</span>
-          <span>コースを左右に運転して❓キューブをキャッチ！暗算正解で超加速ブースト！</span>
-        </div>
-      </div>
-
-      <!-- Association & Difficulty Card -->
-      <div class="glass-panel rounded-2xl p-2.5 sm:p-3 border-pink-500/40 shadow-[0_0_20px_rgba(236,72,153,0.2)]">
-        <!-- Association Selector Tabs -->
-        <div class="mb-2">
-          <div class="flex justify-between items-center mb-1">
-            <span class="text-[9px] sm:text-[10px] text-cyan-300 font-black tracking-wider flex items-center gap-1">
-              <span>🏛️</span> 公式きまり（連盟・協会）
-            </span>
-            <span id="assocBadge" class="text-[8px] sm:text-[9px] px-1.5 py-0.5 rounded-full font-black bg-pink-950 text-pink-300 border border-pink-500/60">公式規格</span>
-          </div>
-          <div class="grid grid-cols-3 gap-1 bg-slate-900/90 p-1 rounded-xl border border-slate-700/80">
-            <button id="assocBtn_flash" onclick="selectAssociation('flash_assoc')" class="py-1 px-1 rounded-lg text-[10px] sm:text-[11px] font-black tracking-tighter transition-all bg-pink-600 text-white shadow-[0_0_12px_rgba(236,72,153,0.6)]">
-              日フ検協
-            </button>
-            <button id="assocBtn_zenju" onclick="selectAssociation('zenjuren')" class="py-1 px-1 rounded-lg text-[10px] sm:text-[11px] font-black tracking-tighter transition-all text-slate-400 hover:text-white">
-              全珠連
-            </button>
-            <button id="assocBtn_nichiju" onclick="selectAssociation('nichijuren')" class="py-1 px-1 rounded-lg text-[10px] sm:text-[11px] font-black tracking-tighter transition-all text-slate-400 hover:text-white">
-              日珠連
-            </button>
-          </div>
-          <div id="assocFullName" class="text-[9px] sm:text-[10px] text-pink-300 font-bold mt-1 text-center truncate">
-            一般社団法人 日本フラッシュ暗算検定協会
-          </div>
-        </div>
-
-        <!-- Level Display & Quick Pick Modal Button -->
-        <div class="flex justify-between items-center mb-1.5 pt-1 border-t border-slate-700/60">
-          <div>
-            <span class="text-[9px] text-slate-300 font-bold">きゅう・だん (レベル)</span>
-            <div class="flex items-center gap-1.5 mt-0.5">
-              <div id="diffDisplay" class="bg-pink-950/90 border border-pink-500 text-pink-400 font-black px-2.5 py-0.5 rounded-lg text-base drop-shadow-[0_0_8px_#ec4899]">6級</div>
-              <button onclick="openLevelModal()" class="px-2 py-0.5 rounded-lg text-[9px] font-black bg-cyan-950 text-cyan-300 border border-cyan-500/70 hover:bg-cyan-900 active:scale-95 flex items-center gap-1 shadow-[0_0_8px_rgba(6,182,212,0.4)]">
-                <span>📋</span> えらぶ
-              </button>
-            </div>
-          </div>
-          <div class="text-right">
-            <span class="text-[8px] text-slate-400 font-bold">1問のはやさ</span>
-            <div id="ruleSpeed" class="text-xs font-black text-cyan-300">1.50秒 / 口</div>
-          </div>
-        </div>
-
-        <!-- Slider -->
-        <input type="range" id="diffSlider" min="0" max="22" value="6" class="w-full mb-1 accent-pink-500 cursor-pointer">
-        <div class="flex justify-between text-[8px] text-slate-400 font-bold">
-          <span id="sliderMinLabel">20級 (かんたん)</span>
-          <span id="sliderMaxLabel">二十段 (ちょうたつじん)</span>
-        </div>
-
-        <!-- Rule Specifications Grid -->
-        <div class="mt-1.5 grid grid-cols-3 gap-1 text-[9px] sm:text-[10px] text-cyan-200 font-bold bg-slate-900/90 p-1.5 rounded-xl border border-cyan-900/80 text-center">
-          <div>けた数: <span id="ruleDigits" class="text-white font-black">2桁</span></div>
-          <div>かず: <span id="ruleKuchi" class="text-white font-black">6口</span></div>
-          <div>じかん: <span id="ruleTime" class="text-white font-black">9.0秒</span></div>
-        </div>
-        <div class="mt-1 text-[8px] text-slate-400 text-center font-bold">
-          ごうかくきじゅん: 10問中 7問せいかい (70点以上)
-        </div>
-      </div>
-
-      <!-- Demo Driver & Items -->
-      <div class="flex gap-2">
-        <div class="glass-panel rounded-2xl p-2 sm:p-2.5 flex-1 flex justify-between items-center border-purple-500/50">
-          <div>
-            <div class="text-[11px] text-purple-300 font-black">🤖 オートうんてん</div>
-            <div class="text-[8px] text-slate-400">コンピュータが自動で回答</div>
-          </div>
-          <label class="relative inline-block w-10 h-5 align-middle select-none">
-            <input type="checkbox" id="autoPlayToggle" class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer z-10 transition-transform duration-200">
-            <label for="autoPlayToggle" class="toggle-label block overflow-hidden h-5 rounded-full bg-slate-600 cursor-pointer"></label>
-          </label>
-        </div>
-
-        <button onclick="openGarage()" class="glass-panel rounded-2xl px-3 flex items-center gap-1.5 border-emerald-500/40 text-left active:scale-95">
-          <div class="text-[8px] text-slate-300 font-bold">アイテム<br><span id="lobbyItemCount" class="text-emerald-400 text-[11px] font-black">3個 つかえる</span></div>
-          <span class="text-lg">🎒</span>
-        </button>
-      </div>
-
-      <!-- Start Button (Dynamic based on selected mode) -->
-      <button id="startBtnMain" onclick="startGame()" class="w-full btn-neon text-white font-black rounded-2xl py-3 px-4 flex items-center justify-center gap-2 text-lg sm:text-xl shadow-[0_0_30px_rgba(236,72,153,0.8)] animate-pulse border-pink-400 bg-gradient-to-r from-pink-500 to-purple-600">
-        🏎️ レーススタート！ (3周勝負)
-      </button>
-    </div>
-  </div>
-
-  <!-- ==================== GARAGE & GACHA MODAL ==================== -->
-  <div id="garageModal" class="hidden-force absolute inset-0 z-50 flex flex-col bg-slate-950/95 backdrop-blur-xl p-4 sm:p-5 overflow-y-auto" style="padding-top: max(1.2rem, env(safe-area-inset-top)); padding-bottom: max(1.2rem, env(safe-area-inset-bottom));">
-    <div class="flex justify-between items-center mb-4">
-      <div>
-        <h2 class="text-xl sm:text-2xl font-black text-cyan-400 italic">⚙️ ガレージ & ショップ</h2>
-        <div class="flex gap-3 text-xs font-bold mt-1">
-          <span class="text-yellow-400">🏆 <span id="garagePts">1,250</span> ポイント</span>
-          <span class="text-cyan-400">💎 <span id="garageCores">120</span> コア</span>
-        </div>
-      </div>
-      <button onclick="closeGarage()" class="w-9 h-9 rounded-full glass-panel flex items-center justify-center text-slate-300 hover:text-white border-slate-600 text-lg">✕</button>
-    </div>
-
-    <!-- Tabs -->
-    <div class="flex gap-2 mb-4">
-      <button id="tabMachinesBtn" onclick="switchGarageTab('machines')" class="flex-1 py-2 rounded-xl text-xs font-black bg-cyan-600 text-white border border-cyan-400">🏎️ マシン</button>
-      <button id="tabShopBtn" onclick="switchGarageTab('shop')" class="flex-1 py-2 rounded-xl text-xs font-black bg-slate-800 text-slate-300 border border-slate-700">🛒 ショップ</button>
-      <button id="tabGachaBtn" onclick="switchGarageTab('gacha')" class="flex-1 py-2 rounded-xl text-xs font-black bg-slate-800 text-slate-300 border border-slate-700">🎁 ガチャ</button>
-    </div>
-
-    <!-- TAB 1: MACHINES -->
-    <div id="tabMachines" class="space-y-3">
-      <div id="machineCardsList" class="space-y-3"></div>
-    </div>
-
-    <!-- TAB 2: ITEM SHOP -->
-    <div id="tabShop" class="hidden-force space-y-3">
-      <div class="glass-panel p-3.5 rounded-2xl border-cyan-500/30 flex justify-between items-center">
-        <div class="flex items-center gap-3">
-          <span class="text-3xl">⚡</span>
-          <div>
-            <div class="text-sm font-black text-white">ロケットブースト</div>
-            <div class="text-[10px] text-slate-400">つぎの1問正解時に確定でロケットダッシュ！</div>
-          </div>
-        </div>
-        <div class="text-right">
-          <button onclick="buyItem('nitro', 200)" class="btn-neon px-3 py-1.5 rounded-xl text-xs font-black text-white">200 pt</button>
-          <div class="text-[10px] text-cyan-300 mt-1 font-bold">所持: <span id="countNitro">1</span></div>
-        </div>
-      </div>
-
-      <div class="glass-panel p-3.5 rounded-2xl border-purple-500/30 flex justify-between items-center">
-        <div class="flex items-center gap-3">
-          <span class="text-3xl">⏱️</span>
-          <div>
-            <div class="text-sm font-black text-white">タイムワープ (スロー)</div>
-            <div class="text-[10px] text-slate-400">すうじの点滅がゆっくりになって見やすくなる！</div>
-          </div>
-        </div>
-        <div class="text-right">
-          <button onclick="buyItem('warp', 300)" class="btn-neon px-3 py-1.5 rounded-xl text-xs font-black text-white">300 pt</button>
-          <div class="text-[10px] text-purple-300 mt-1 font-bold">所持: <span id="countWarp">1</span></div>
-        </div>
-      </div>
-
-      <div class="glass-panel p-3.5 rounded-2xl border-emerald-500/30 flex justify-between items-center">
-        <div class="flex items-center gap-3">
-          <span class="text-3xl">🛡️</span>
-          <div>
-            <div class="text-sm font-black text-white">バリアシールド</div>
-            <div class="text-[10px] text-slate-400">まちがえても1回だけスピードがおちない！</div>
-          </div>
-        </div>
-        <div class="text-right">
-          <button onclick="buyItem('shield', 400)" class="btn-neon px-3 py-1.5 rounded-xl text-xs font-black text-white">400 pt</button>
-          <div class="text-[10px] text-emerald-300 mt-1 font-bold">所持: <span id="countShield">1</span></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- TAB 3: GACHA -->
-    <div id="tabGacha" class="hidden-force flex flex-col items-center text-center py-6">
-      <div class="w-28 h-28 rounded-3xl glass-panel border-pink-500/50 flex items-center justify-center text-5xl mb-4 shadow-[0_0_35px_rgba(236,72,153,0.5)] animate-pulse">
-        📦
-      </div>
-      <h3 class="text-2xl font-black text-white italic mb-1">サイバーマシン ガチャ</h3>
-      <p class="text-xs text-slate-300 mb-6 max-w-xs">エナジーコアを100個使って、超かっこいい新マシンをゲットしよう！</p>
-      
-      <button onclick="spinGacha()" class="btn-neon text-white font-black px-8 py-3.5 rounded-2xl text-lg tracking-widest shadow-[0_0_30px_#ec4899] bg-gradient-to-r from-pink-500 to-purple-600">
-        💎 ガチャをひく (100 コア)
-      </button>
-
-      <div id="gachaResult" class="hidden-force mt-6 glass-panel p-4 rounded-2xl border-yellow-400 w-full animate-bounce">
-        <div class="text-xs text-yellow-300 font-bold uppercase">マシンをゲット！！</div>
-        <div id="gachaItemTitle" class="text-xl font-black text-white mt-1">ゴールデンフェニックス (SSR)</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ==================== LEVEL SELECT MODAL ==================== -->
-  <div id="levelSelectModal" class="hidden-force absolute inset-0 z-50 flex flex-col bg-slate-950/95 backdrop-blur-xl p-4 sm:p-5 overflow-y-auto" style="padding-top: max(1.2rem, env(safe-area-inset-top)); padding-bottom: max(1.2rem, env(safe-area-inset-bottom));">
-    <div class="flex justify-between items-center mb-3">
-      <div>
-        <h2 class="text-xl sm:text-2xl font-black text-pink-400 italic">📋 レベルをえらぶ (公式ルール)</h2>
-        <div id="modalAssocTitle" class="text-xs font-bold text-cyan-300">一般社団法人 日本フラッシュ暗算検定協会</div>
-      </div>
-      <button onclick="closeLevelModal()" class="w-8 h-8 rounded-full glass-panel flex items-center justify-center text-slate-400 hover:text-white border border-slate-600 active:scale-90">✕</button>
-    </div>
-
-    <!-- Filter Tabs: All, Kyu, Dan -->
-    <div class="flex gap-1.5 mb-3">
-      <button id="levelTabAll" onclick="filterLevelModal('all')" class="flex-1 py-1.5 rounded-xl text-xs font-black bg-pink-600 text-white border border-pink-400">すべて</button>
-      <button id="levelTabKyu" onclick="filterLevelModal('kyu')" class="flex-1 py-1.5 rounded-xl text-xs font-black bg-slate-800 text-slate-300 border border-slate-700">級位 (きゅう)</button>
-      <button id="levelTabDan" onclick="filterLevelModal('dan')" class="flex-1 py-1.5 rounded-xl text-xs font-black bg-slate-800 text-slate-300 border border-slate-700">段位 (だん)</button>
-    </div>
-
-    <!-- Dynamic Cards Grid -->
-    <div id="levelCardsGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-2 overflow-y-auto pb-6">
-      <!-- Populated via renderLevelCards() -->
-    </div>
-  </div>
-
-  <!-- ==================== VICTORY & RESULTS SCREEN ==================== -->
-  <div id="victoryScreen" class="hidden-force absolute inset-0 z-50 flex flex-col items-center justify-between bg-slate-950/95 backdrop-blur-md p-4 sm:p-5 text-center overflow-y-auto" style="padding-top: max(1.2rem, env(safe-area-inset-top)); padding-bottom: max(1.2rem, env(safe-area-inset-bottom));">
-    
-    <!-- VIEW A: GRAND PRIX RESULTS -->
-    <div id="grandPrixResultView" class="w-full my-auto">
-      <div id="resultTrophy" class="text-6xl mb-1 animate-bounce">🏆</div>
-      <h2 id="resultRankText" class="text-3xl sm:text-4xl font-black text-yellow-400 drop-shadow-[0_0_25px_#eab308] italic">1い ゴール！</h2>
-      <p id="resultSubText" class="text-cyan-300 text-xs font-bold tracking-widest mb-3">グランプリ チャンピオン！</p>
-      
-      <!-- Stats Panel -->
-      <div class="glass-panel p-3.5 sm:p-4 rounded-2xl w-full border-cyan-500/40 mb-3 text-left">
-        <div class="text-[10px] text-cyan-300 font-bold tracking-wider mb-2">🏁 レースのきろく</div>
-        <div class="grid grid-cols-2 gap-2 text-xs font-bold text-slate-200">
-          <div class="bg-slate-900/70 p-2 rounded-lg">⏱️ 平均こたえ時間: <span id="statAvgTime" class="text-cyan-300 font-black">1.2秒</span></div>
-          <div class="bg-slate-900/70 p-2 rounded-lg">⚡ ロケットブースト: <span id="statNitros" class="text-pink-400 font-black">5回</span></div>
-          <div class="bg-slate-900/70 p-2 rounded-lg">🎯 せいかい率: <span id="statAccuracy" class="text-green-400 font-black">100%</span></div>
-          <div class="bg-slate-900/70 p-2 rounded-lg">💥 れんぞく正解: <span id="statCombo" class="text-yellow-400 font-black">10問</span></div>
-        </div>
-
-        <div class="mt-3 pt-2.5 border-t border-slate-700/60 flex justify-between items-center text-sm font-black">
-          <div>しょうきん: <span class="text-yellow-400">+<span id="earnedPts">0</span> pt</span></div>
-          <div>エナジーコア: <span class="text-cyan-400">+<span id="earnedCores">0</span> コア</span></div>
-        </div>
-      </div>
-      
-      <!-- Badge Notification -->
-      <div id="unlockedBadge" class="hidden-force glass-panel p-2.5 rounded-xl border-pink-400 flex items-center gap-2.5 mb-3">
-        <span class="text-2xl">🏅</span>
-        <div class="text-left">
-          <div class="text-[9px] text-pink-300 font-bold uppercase">しょうごう ゲット！</div>
-          <div id="badgeTitle" class="text-white font-black text-xs">⚡ 電光石火の暗算レーサー</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- VIEW B: CERTIFICATION EXAM OFFICIAL CERTIFICATE -->
-    <div id="examResultView" class="hidden-force w-full my-auto">
-      <div class="cert-frame rounded-2xl p-4 sm:p-5 relative text-center shadow-2xl">
-        <!-- Certificate Header -->
-        <div class="text-[10px] sm:text-xs text-yellow-300/80 tracking-[0.3em] font-black uppercase mb-1">OFFICIAL CERTIFICATION</div>
-        <h2 class="text-2xl sm:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-200 via-yellow-400 to-amber-500 drop-shadow-[0_0_15px_rgba(234,179,8,0.6)]">
-          合格認定証
-        </h2>
-        <div class="w-24 h-0.5 bg-gradient-to-r from-transparent via-yellow-400 to-transparent mx-auto my-1.5"></div>
+    <!-- UI Layer -->
+    <div id="ui-layer">
         
-        <div class="text-xs text-slate-300 font-bold mt-2">
-          <span class="text-cyan-300 font-black text-sm">あなた</span> 殿
+        <!-- Top HUD -->
+        <div id="hud" class="w-full flex justify-between p-4 hidden">
+            <div class="text-xl font-bold">WAVE: <span id="hud-wave" class="text-blue-400">1</span></div>
+            <div class="text-xl font-bold">BASE HP: <span id="hud-hp" class="text-green-400">100</span>%</div>
         </div>
 
-        <!-- Association Name -->
-        <div id="certAssocName" class="text-[10px] sm:text-xs text-pink-300 font-bold mt-1">
-          一般社団法人 日本フラッシュ暗算検定協会
-        </div>
+        <!-- Spacer -->
+        <div class="flex-grow"></div>
 
-        <!-- Grade Banner -->
-        <div class="my-3 py-2 bg-slate-900/90 rounded-xl border border-yellow-500/50 shadow-inner">
-          <div class="text-[10px] text-slate-400 font-bold">にんてい レベル</div>
-          <div id="certLevelTitle" class="text-2xl sm:text-3xl font-black text-yellow-400 drop-shadow-[0_0_10px_#eab308]">
-            6級 合格
-          </div>
+        <!-- Bottom Numpad (Hidden by default) -->
+        <div id="numpad-section" class="w-full hidden">
+            <div id="numpad-container">
+                <div id="player-input-display" class="font-orbitron"></div>
+                <div class="numpad-grid font-orbitron">
+                    <button class="num-btn" onclick="inputNum(1)">1</button>
+                    <button class="num-btn" onclick="inputNum(2)">2</button>
+                    <button class="num-btn" onclick="inputNum(3)">3</button>
+                    <button class="num-btn" onclick="inputNum(4)">4</button>
+                    <button class="num-btn" onclick="inputNum(5)">5</button>
+                    <button class="num-btn" onclick="inputNum(6)">6</button>
+                    <button class="num-btn" onclick="inputNum(7)">7</button>
+                    <button class="num-btn" onclick="inputNum(8)">8</button>
+                    <button class="num-btn" onclick="inputNum(9)">9</button>
+                    <button class="num-btn del-btn" onclick="deleteNum()">DEL</button>
+                    <button class="num-btn" onclick="inputNum(0)">0</button>
+                    <button class="num-btn action-btn" onclick="submitAnswer()">ENTER</button>
+                </div>
+            </div>
         </div>
-
-        <p class="text-[10px] sm:text-[11px] text-slate-200 font-bold leading-relaxed mb-3">
-          頭書の者は 公式フラッシュ暗算検定において<br>優秀な成績をおさめたことをここに証します
-        </p>
-
-        <!-- Score & Seal Row -->
-        <div class="flex justify-between items-center bg-slate-950/70 p-2.5 rounded-xl border border-slate-700/60">
-          <div class="text-left">
-            <div class="text-[9px] text-slate-400">得点 (70点以上合格):</div>
-            <div id="certScoreText" class="text-sm font-black text-white">10問中 8問正解 (80点)</div>
-            <div id="certPassText" class="text-xs font-black text-emerald-400 mt-0.5">🎉 おめでとう！合格！</div>
-          </div>
-          <div class="cert-seal">
-            公式<br>検定印
-          </div>
-        </div>
-      </div>
     </div>
-    
-    <button onclick="closeVictory()" class="btn-neon w-full py-3.5 rounded-2xl text-white font-black text-base tracking-wider mt-3">
-      🏠 ロビーへもどる
-    </button>
-  </div>
 
-  <!-- ==================== GAME SCREEN: GRAND PRIX & EXAM MODE ==================== -->
-  <div id="gameScreen" class="absolute inset-0 z-0 hidden-force flex flex-col justify-between overflow-hidden">
-    
-    <!-- TOP SECTION: HUD BAR (Common across modes) -->
-    <div class="z-30 w-full flex flex-col" style="padding-top: max(0.8rem, env(safe-area-inset-top));">
-      <div class="px-3 sm:px-4 flex justify-between items-center">
-        <!-- Quit + Level -->
-        <div class="flex items-center gap-1.5">
-          <button onclick="endRace(false)" class="w-8 h-8 rounded-full glass-panel flex items-center justify-center text-slate-300 hover:text-white border border-slate-500 active:scale-90" title="やめる">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-          </button>
-          <div class="glass-panel px-2 py-0.5 rounded-xl flex items-center gap-1 border-cyan-400/60 shadow-[0_0_10px_rgba(6,182,212,0.4)]">
-            <span class="text-[8px] text-cyan-300 font-bold" id="ingameAssocTag">日フ</span>
-            <span id="ingameLevel" class="text-cyan-300 font-black text-xs sm:text-sm drop-shadow-[0_0_8px_#22d3ee]">6級</span>
-          </div>
-          <div id="hudModeBadge" class="glass-panel px-2 py-0.5 rounded-full border-pink-500 text-pink-300 font-black text-[9px]">
-            🏎️ レース
-          </div>
-        </div>
+    <!-- Title Screen -->
+    <div id="title-screen" class="screen">
+        <h1 class="text-4xl md:text-6xl font-black mb-2 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 text-center leading-tight">
+            FLASH ANZAN<br><span class="text-2xl text-white">Army Defense</span>
+        </h1>
+        <p class="mb-8 text-gray-300">iOSデモ版プロトタイプ</p>
         
-        <!-- Center Info (Grand Prix: Lap/Rank; Exam: Question Progress) -->
-        <div class="flex items-center gap-1">
-          <!-- Grand Prix HUD items -->
-          <div id="gpProgressBadge" class="glass-panel px-2.5 py-0.5 rounded-full border-pink-500/80 shadow-[0_0_10px_rgba(236,72,153,0.5)]">
-            <span id="progressText" class="text-pink-400 font-black text-xs">1 / 3 周</span>
-          </div>
-          <div id="livePositionBadge" class="glass-panel px-2 py-0.5 rounded-full border-yellow-400 text-yellow-400 font-black text-xs tracking-wider shadow-[0_0_10px_#eab308]">
-            1位
-          </div>
-          <div id="zoneBadge" class="glass-panel px-1.5 py-0.5 rounded-lg border-cyan-400 text-cyan-300 font-bold text-[9px]">
-            ステージ 1
-          </div>
-          
-          <!-- Exam HUD items (Shown only in exam mode) -->
-          <div id="examProgressBadge" class="hidden-force glass-panel px-3 py-0.5 rounded-full border-cyan-400 text-cyan-300 font-black text-xs">
-            第 <span id="examQNum">1</span> 問 / 10問
-          </div>
+        <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 w-11/12 max-w-md">
+            <h2 class="text-xl font-bold mb-4 text-center">難易度を選択</h2>
+            <div class="grid grid-cols-1 gap-3">
+                <button onclick="startGame(1, 3, 1000)" class="w-full py-3 bg-blue-600 hover:bg-blue-500 rounded-xl font-bold text-lg transition-colors">
+                    レベル1 (1桁 3口)
+                </button>
+                <button onclick="startGame(2, 5, 800)" class="w-full py-3 bg-purple-600 hover:bg-purple-500 rounded-xl font-bold text-lg transition-colors">
+                    レベル2 (2桁 5口)
+                </button>
+                <button onclick="startGame(3, 7, 500)" class="w-full py-3 bg-red-600 hover:bg-red-500 rounded-xl font-bold text-lg transition-colors">
+                    レベル3 (3桁 7口)
+                </button>
+            </div>
         </div>
-
-        <!-- Right: Active Power-ups Bar (Grand Prix) -->
-        <div id="inGameItemBar" class="flex gap-1">
-          <button id="inGameNitroBtn" onclick="useItem('nitro')" class="w-7 h-7 rounded-lg glass-panel flex items-center justify-center border-cyan-400 text-xs active:scale-90" title="ロケットブースト">⚡</button>
-          <button id="inGameWarpBtn" onclick="useItem('warp')" class="w-7 h-7 rounded-lg glass-panel flex items-center justify-center border-purple-400 text-xs active:scale-90" title="スロー">⏱️</button>
-          <button id="inGameShieldBtn" onclick="useItem('shield')" class="w-7 h-7 rounded-lg glass-panel flex items-center justify-center border-emerald-400 text-xs active:scale-90" title="バリア">🛡️</button>
-        </div>
-      </div>
-
-      <!-- Flash Number Display Area for Grand Prix (Sole Occupant, Dedicated High-Contrast Focus) -->
-      <div id="grandPrixEquationArea" class="h-24 sm:h-28 flex flex-col items-center justify-center pointer-events-none relative mt-0.5 z-30 select-none">
-        <div id="equation" class="flex items-center justify-center w-full z-30 drop-shadow-[0_4px_24px_rgba(0,0,0,0.95)]"></div>
-      </div>
     </div>
 
-    <!-- ==================== MODE 1: GRAND PRIX RACING TRACK ==================== -->
-    <div id="trackContainer" class="relative w-full flex-grow flex items-center justify-center overflow-hidden my-0.5">
-      <canvas id="raceCanvas" class="w-full h-full block cursor-ew-resize" style="touch-action: none;"></canvas>
-      
-      <!-- Floating Race Track Feedback (Over the Circuit, Completely Separated from Numbers) -->
-      <div id="feedback" class="absolute top-2 left-1/2 -translate-x-1/2 font-black tracking-wider text-center w-full max-w-[90%] z-20 pointer-events-none transition-all duration-150"></div>
-      
-      <!-- Auto Play Badge -->
-      <div id="autoPlayIndicator" class="absolute top-1 left-1/2 -translate-x-1/2 hidden-force bg-pink-600/90 text-white text-[8px] font-bold px-2.5 py-0.5 rounded-full animate-pulse border border-pink-400 z-20 tracking-wider shadow-[0_0_10px_#ec4899]">
-        🤖 オートうんてん中
-      </div>
-
-      <!-- Question Item Notice Popup -->
-      <div id="itemNoticeBanner" class="hidden-force absolute top-3 left-1/2 -translate-x-1/2 z-30 px-3 py-1 rounded-full bg-yellow-400 text-black font-black text-xs shadow-[0_0_20px_#facc15] animate-bounce flex items-center gap-1.5 pointer-events-none">
-        <span>❓</span> 暗算アイテム ゲット！ もんだいが出現！
-      </div>
-
-      <!-- On-Screen Left & Right Steering Controls for Mobile / Thumb play -->
-      <div id="touchSteerControls" class="absolute bottom-2 left-2.5 z-30 flex items-center gap-2 pointer-events-auto">
-        <button id="steerLeftBtn" class="steer-btn w-13 h-11 px-3 py-1 flex items-center justify-center text-xs sm:text-sm font-black active:scale-90" aria-label="左へ">
-          ◀ 左
+    <!-- Result Screen -->
+    <div id="result-screen" class="screen hidden">
+        <h2 id="result-title" class="text-5xl font-black mb-4"></h2>
+        <p class="text-xl mb-8">到達 WAVE: <span id="result-wave" class="font-bold text-blue-400 text-3xl"></span></p>
+        <button onclick="showTitle()" class="px-8 py-4 bg-blue-600 hover:bg-blue-500 rounded-full font-bold text-xl shadow-[0_0_15px_rgba(37,99,235,0.5)] transition-all">
+            タイトルへ戻る
         </button>
-        <button id="steerRightBtn" class="steer-btn w-13 h-11 px-3 py-1 flex items-center justify-center text-xs sm:text-sm font-black active:scale-90" aria-label="右へ">
-          右 ▶
-        </button>
-      </div>
-
-      <!-- Speedometer overlay -->
-      <div class="absolute bottom-2 right-2.5 z-30 pointer-events-none">
-        <div class="glass-panel w-13 h-13 sm:w-14 sm:h-14 rounded-full flex flex-col items-center justify-center border-t-2 border-pink-500 shadow-[0_0_15px_rgba(236,72,153,0.5)]">
-          <span id="speed" class="text-white text-sm sm:text-base font-black leading-none drop-shadow-[0_0_6px_#fff]">0</span>
-          <span class="text-pink-400 text-[7px] sm:text-[8px] font-bold mt-0.5 tracking-wider">km/h</span>
-        </div>
-      </div>
-
-      <!-- Active Shield Notification -->
-      <div id="shieldIndicator" class="hidden-force absolute top-1 left-3 glass-panel px-2 py-0.5 rounded-full border-emerald-400 text-emerald-300 text-[8px] sm:text-[9px] font-black z-30 flex items-center gap-1 shadow-[0_0_12px_#10b981]">
-        🛡️ バリア作動中
-      </div>
     </div>
-
-    <!-- ==================== MODE 2: CERTIFICATION EXAM INTERFACE (NO TRACK) ==================== -->
-    <div id="examContainer" class="hidden-force relative w-full flex-grow flex flex-col justify-between p-3 sm:p-5 my-0.5">
-      
-      <!-- Exam Progress Header -->
-      <div class="glass-panel p-2.5 rounded-2xl border-cyan-400/40 text-center">
-        <div class="flex justify-between items-center text-[10px] sm:text-xs font-bold mb-1.5 text-slate-300">
-          <span id="examAssocHeaderTitle">日本フラッシュ暗算検定協会</span>
-          <span id="examScoreLive" class="text-yellow-400 font-black">せいかい: 0 / 10問</span>
-        </div>
-        
-        <!-- 10 Question Pills -->
-        <div id="examPillsGrid" class="grid grid-cols-10 gap-1 mt-1">
-          <!-- Populated dynamically via JS: 1 to 10 -->
-        </div>
-      </div>
-
-      <!-- Dedicated Clean Flash Number Display Area (Focus & Distraction-Free) -->
-      <div class="my-auto flex flex-col items-center justify-center py-6 select-none relative">
-        <div id="examCountdownText" class="text-4xl sm:text-5xl font-black text-pink-400 animate-pulse italic">
-          じゅんびはいい？
-        </div>
-        <div id="examEquation" class="flex items-center justify-center w-full z-30 drop-shadow-[0_4px_30px_rgba(0,0,0,0.95)]"></div>
-        <div id="examFeedbackText" class="text-2xl font-black mt-2 h-8 flex items-center justify-center"></div>
-      </div>
-
-      <!-- Exam Input Numpad Area (Embedded cleanly inside Exam Container) -->
-      <div id="examInputArea" class="glass-panel rounded-2xl p-3 border-t-2 border-cyan-400 shadow-[0_-10px_30px_rgba(6,182,212,0.4)]">
-        <div class="flex justify-between items-center mb-2 px-1">
-          <span class="text-[10px] text-cyan-300 font-black">こたえ:</span>
-          <div id="examAnswerDisplay" class="text-3xl sm:text-4xl font-black text-white tracking-widest flex-grow text-center drop-shadow-[0_0_15px_#22d3ee] h-8 flex items-center justify-center"></div>
-          <button onclick="delNum()" class="text-cyan-400 text-2xl px-2 active:text-white">⌫ けす</button>
-        </div>
-        <div class="grid grid-cols-3 gap-1.5">
-          <button class="numpad-btn" onclick="addNum(1, this)">1</button>
-          <button class="numpad-btn" onclick="addNum(2, this)">2</button>
-          <button class="numpad-btn" onclick="addNum(3, this)">3</button>
-          <button class="numpad-btn" onclick="addNum(4, this)">4</button>
-          <button class="numpad-btn" onclick="addNum(5, this)">5</button>
-          <button class="numpad-btn" onclick="addNum(6, this)">6</button>
-          <button class="numpad-btn" onclick="addNum(7, this)">7</button>
-          <button class="numpad-btn" onclick="addNum(8, this)">8</button>
-          <button class="numpad-btn" onclick="addNum(9, this)">9</button>
-          <button class="numpad-btn font-black text-cyan-300 bg-cyan-900/40" onclick="addNum(0, this)">0</button>
-          <button id="examSubmitBtn" class="col-span-2 btn-neon text-white font-black text-lg rounded-2xl flex items-center justify-center gap-1.5" onclick="submitAnswer()">
-            ✓ 決定 (けってい)
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- ==================== GRAND PRIX INPUT & NUMPAD ==================== -->
-    <div id="inputArea" class="hidden-force w-full glass-panel rounded-t-3xl p-2.5 sm:p-3 z-40 border-t-2 border-cyan-400 shadow-[0_-10px_40px_rgba(6,182,212,0.7)]" style="padding-bottom: max(1.2rem, env(safe-area-inset-bottom));">
-      <div class="flex justify-between items-center mb-1.5 px-1">
-        <!-- Quick Answer Bar -->
-        <div class="flex items-center gap-1">
-          <span class="text-[9px] text-cyan-300 font-bold">⚡ ブースト:</span>
-          <div class="w-16 h-2 bg-slate-800 rounded-full overflow-hidden border border-cyan-500/40">
-            <div id="nitroTimerBar" class="h-full bg-cyan-400 transition-all duration-75" style="width: 100%;"></div>
-          </div>
-        </div>
-        <div id="answerDisplay" class="text-3xl sm:text-4xl font-black text-white tracking-widest flex-grow text-center drop-shadow-[0_0_15px_#22d3ee] h-8 flex items-center justify-center"></div>
-        <button onclick="delNum()" class="text-cyan-400 text-2xl px-2 active:text-white">⌫ けす</button>
-      </div>
-      <div class="grid grid-cols-3 gap-1.5">
-        <button class="numpad-btn" onclick="addNum(1, this)">1</button>
-        <button class="numpad-btn" onclick="addNum(2, this)">2</button>
-        <button class="numpad-btn" onclick="addNum(3, this)">3</button>
-        <button class="numpad-btn" onclick="addNum(4, this)">4</button>
-        <button class="numpad-btn" onclick="addNum(5, this)">5</button>
-        <button class="numpad-btn" onclick="addNum(6, this)">6</button>
-        <button class="numpad-btn" onclick="addNum(7, this)">7</button>
-        <button class="numpad-btn" onclick="addNum(8, this)">8</button>
-        <button class="numpad-btn" onclick="addNum(9, this)">9</button>
-        <button class="numpad-btn font-black text-cyan-300 bg-cyan-900/40" onclick="addNum(0, this)">0</button>
-        <button id="goBtn" class="col-span-2 btn-neon text-white font-black text-base sm:text-lg rounded-2xl flex items-center justify-center gap-1.5" onclick="submitAnswer()">
-          🚀 こたえる (ブースト！)
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
 
 <script>
-  // ==================== AUDIO & FEEDBACK ====================
-  function vibrate(pattern) { if (navigator.vibrate) navigator.vibrate(pattern); }
-  const AudioContext = window.AudioContext || window.webkitAudioContext;
-  let audioCtx;
-  function initAudio() {
-    if (!audioCtx) audioCtx = new AudioContext();
-    if (audioCtx.state === 'suspended') audioCtx.resume();
-  }
-  function playOscillator(freq, type, duration, vol=0.1) {
-    if(!audioCtx) return;
-    const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
-    osc.type = type; osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-    gain.gain.setValueAtTime(vol, audioCtx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
-    osc.connect(gain); gain.connect(audioCtx.destination);
-    osc.start(); osc.stop(audioCtx.currentTime + duration);
-  }
-  function playKick() {
-    if(!audioCtx) return;
-    const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
-    osc.type = 'sine'; osc.frequency.setValueAtTime(120, audioCtx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
-    gain.gain.setValueAtTime(0.7, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
-    osc.connect(gain); gain.connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime + 0.5);
-  }
-  function playNitroSound() {
-    initAudio(); playKick();
-    playOscillator(600, 'sawtooth', 0.35, 0.4);
-    setTimeout(() => playOscillator(1200, 'square', 0.25, 0.3), 100);
-  }
-  function playDashPlateSound() {
-    initAudio(); playKick();
-    playOscillator(480, 'sine', 0.15, 0.3);
-    setTimeout(() => playOscillator(960, 'triangle', 0.25, 0.4), 60);
-  }
-  function playTap() { initAudio(); playOscillator(1200, 'sine', 0.04, 0.04); vibrate([15]); }
-  function playCorrect(comboCount) {
-    initAudio(); playKick();
-    const baseFreq = 440 * Math.pow(1.05946, comboCount % 24);
-    playOscillator(baseFreq, 'sine', 0.2, 0.4); playOscillator(baseFreq * 1.5, 'triangle', 0.3, 0.3);
-  }
-  function playWrong() { 
-    initAudio(); playOscillator(80, 'sawtooth', 0.45, 0.5); vibrate([150, 50, 150]);
-  }
-  function playVictory() {
-    initAudio(); playOscillator(440, 'sine', 0.2, 0.3);
-    setTimeout(() => playOscillator(554, 'sine', 0.2, 0.3), 200);
-    setTimeout(() => playOscillator(659, 'sine', 0.5, 0.3), 400);
-    setTimeout(() => playOscillator(880, 'square', 1.2, 0.4), 600);
-    setTimeout(() => playKick(), 600);
-  }
+/**
+ * ARMY DEFENSE - Flash Anzan Prototype
+ */
 
-  function screenFlash(color) {
-    if (isFlashingNumbers) return; // Strictly blocked during active calculation so numbers are NEVER obscured!
-    const container = document.getElementById('trackContainer') || document.body;
-    const flash = document.createElement('div');
-    flash.className = 'absolute inset-0 z-20 pointer-events-none transition-opacity duration-200';
-    flash.style.backgroundColor = color;
-    container.appendChild(flash);
-    requestAnimationFrame(() => { flash.style.opacity = '0'; });
-    setTimeout(() => flash.remove(), 220);
-  }
+// --- Constants & Config ---
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+let cw = canvas.width = window.innerWidth;
+let ch = canvas.height = window.innerHeight;
 
-  // ==================== ASSET LOADING (4K F-ZERO CRAFTS) ====================
-  const CRAFT_SPRITES = {
-    blue: new Image(),
-    red: new Image(),
-    yellow: new Image(),
-    green: new Image()
-  };
-  CRAFT_SPRITES.blue.src = 'fzero_topdown_blue_1791068086711.jpg';
-  CRAFT_SPRITES.red.src = 'fzero_topdown_red_1791068105117.jpg';
-  CRAFT_SPRITES.yellow.src = 'fzero_topdown_yellow_1791068124260.jpg';
-  CRAFT_SPRITES.green.src = 'fzero_topdown_green_1791068143222.jpg';
+window.addEventListener('resize', () => {
+    cw = canvas.width = window.innerWidth;
+    ch = canvas.height = window.innerHeight;
+});
 
-  // ==================== 3 DYNAMIC STAGES // F-ZERO THEMES ====================
-  const STAGES = [
-    {
-      id: 1,
-      name: "NEO TOKYO CIRCUIT",
-      subtitle: "ZONE 1 // NIGHT MEGACITY",
-      skyTop: "#020617", skyMid: "#091230", skyBottom: "#1e1b4b",
-      roadLight: "#0c1329", roadDark: "#070b18",
-      curb1: "#ec4899", curb2: "#06b6d4",
-      laneColor: "rgba(56, 189, 248, 0.45)",
-      ambientColor: "#38bdf8",
-      pillarColor: "#0ea5e9"
-    },
-    {
-      id: 2,
-      name: "SOLAR MAGMA CORRIDOR",
-      subtitle: "ZONE 2 // GEOTHERMAL CANYON",
-      skyTop: "#1c0505", skyMid: "#3f0a0a", skyBottom: "#5b1509",
-      roadLight: "#1f0d09", roadDark: "#130604",
-      curb1: "#f97316", curb2: "#ef4444",
-      laneColor: "rgba(251, 146, 60, 0.55)",
-      ambientColor: "#f97316",
-      pillarColor: "#eab308"
-    },
-    {
-      id: 3,
-      name: "DEEP SPACE HYPERWAY",
-      subtitle: "ZONE 3 // COSMIC WARP SPEED",
-      skyTop: "#050117", skyMid: "#190538", skyBottom: "#35095e",
-      roadLight: "#13092b", roadDark: "#0b051c",
-      curb1: "#a855f7", curb2: "#ec4899",
-      laneColor: "rgba(236, 72, 153, 0.65)",
-      ambientColor: "#c084fc",
-      pillarColor: "#f472b6"
-    }
-  ];
+// Game State
+let state = 'TITLE'; // TITLE, PLAYING_FLASH, PLAYING_INPUT, PLAYING_BATTLE, GAMEOVER
+let wave = 1;
+let hp = 100;
+let config = { digits: 1, count: 3, speed: 1000 };
 
-  let currentStageIndex = 0;
+// Anzan Logic
+let currentProblem = [];
+let correctAnswer = 0;
+let currentInput = "";
+let flashIndex = 0;
+let lastFlashTime = 0;
 
-  // ==================== OFFICIAL ASSOCIATIONS & EXAMINATION STANDARDS ====================
-  const ASSOCIATIONS = {
-    flash_assoc: {
-      id: 'flash_assoc',
-      name: '一般社団法人 日本フラッシュ暗算検定協会',
-      shortName: '日フ検協',
-      tag: '公式検定基準',
-      desc: 'フラッシュ暗算創始者（宮本裕史）考案の公式検定基準。20級〜二十段まで網羅。',
-      rules: [
-        { name: "20級", digits: 1, kuchi: 2, time: 5000 },
-        { name: "15級", digits: 1, kuchi: 3, time: 4500 },
-        { name: "10級", digits: 2, kuchi: 2, time: 4000 },
-        { name: "9級", digits: 2, kuchi: 3, time: 6000 },
-        { name: "8級", digits: 2, kuchi: 4, time: 7000 },
-        { name: "7級", digits: 2, kuchi: 5, time: 8000 },
-        { name: "6級", digits: 2, kuchi: 6, time: 9000 },
-        { name: "5級", digits: 2, kuchi: 7, time: 10000 },
-        { name: "4級", digits: 2, kuchi: 8, time: 11000 },
-        { name: "3級", digits: 2, kuchi: 10, time: 12000 },
-        { name: "2級", digits: 2, kuchi: 12, time: 12000 },
-        { name: "1級", digits: 2, kuchi: 15, time: 13000 },
-        { name: "初段", digits: 2, kuchi: 15, time: 10000 },
-        { name: "二段", digits: 3, kuchi: 4, time: 4000 },
-        { name: "三段", digits: 3, kuchi: 6, time: 5000 },
-        { name: "四段", digits: 3, kuchi: 8, time: 6000 },
-        { name: "五段", digits: 3, kuchi: 10, time: 7000 },
-        { name: "六段", digits: 3, kuchi: 12, time: 8000 },
-        { name: "七段", digits: 3, kuchi: 15, time: 8000 },
-        { name: "八段", digits: 3, kuchi: 15, time: 6000 },
-        { name: "九段", digits: 3, kuchi: 15, time: 4500 },
-        { name: "十段", digits: 3, kuchi: 15, time: 3000 },
-        { name: "二十段", digits: 3, kuchi: 15, time: 1500 }
-      ]
-    },
-    zenjuren: {
-      id: 'zenjuren',
-      name: '公益社団法人 全国珠算教育連盟 (全珠連)',
-      shortName: '全珠連',
-      tag: '連盟公式規格',
-      desc: '全国珠算教育連盟が推奨するフラッシュ暗算ネット検定の基準。10級〜十段。',
-      rules: [
-        { name: "10級", digits: 1, kuchi: 3, time: 4000 },
-        { name: "9級", digits: 1, kuchi: 4, time: 5000 },
-        { name: "8級", digits: 1, kuchi: 5, time: 6000 },
-        { name: "7級", digits: 1, kuchi: 6, time: 6000 },
-        { name: "6級", digits: 2, kuchi: 3, time: 4000 },
-        { name: "5級", digits: 2, kuchi: 4, time: 5000 },
-        { name: "4級", digits: 2, kuchi: 5, time: 6000 },
-        { name: "3級", digits: 2, kuchi: 7, time: 7000 },
-        { name: "2級", digits: 2, kuchi: 10, time: 9000 },
-        { name: "1級", digits: 2, kuchi: 15, time: 12000 },
-        { name: "初段", digits: 2, kuchi: 15, time: 9000 },
-        { name: "二段", digits: 3, kuchi: 5, time: 5000 },
-        { name: "三段", digits: 3, kuchi: 7, time: 6000 },
-        { name: "四段", digits: 3, kuchi: 10, time: 8000 },
-        { name: "五段", digits: 3, kuchi: 12, time: 8000 },
-        { name: "六段", digits: 3, kuchi: 15, time: 8000 },
-        { name: "七段", digits: 3, kuchi: 15, time: 6000 },
-        { name: "八段", digits: 3, kuchi: 15, time: 5000 },
-        { name: "九段", digits: 3, kuchi: 15, time: 4000 },
-        { name: "十段", digits: 3, kuchi: 15, time: 3000 }
-      ]
-    },
-    nichijuren: {
-      id: 'nichijuren',
-      name: '日本珠算連盟 (日珠連)',
-      shortName: '日珠連',
-      tag: '連盟公式検定',
-      desc: '日本珠算連盟のフラッシュ暗算検定基準。高段位は10口の超スピード競技対応。',
-      rules: [
-        { name: "10級", digits: 1, kuchi: 4, time: 4000 },
-        { name: "9級", digits: 1, kuchi: 6, time: 6000 },
-        { name: "8級", digits: 1, kuchi: 8, time: 8000 },
-        { name: "7級", digits: 1, kuchi: 10, time: 10000 },
-        { name: "6級", digits: 2, kuchi: 3, time: 3000 },
-        { name: "5級", digits: 2, kuchi: 4, time: 4000 },
-        { name: "4級", digits: 2, kuchi: 5, time: 5000 },
-        { name: "3級", digits: 2, kuchi: 7, time: 7000 },
-        { name: "2級", digits: 2, kuchi: 10, time: 10000 },
-        { name: "1級", digits: 3, kuchi: 5, time: 5000 },
-        { name: "初段", digits: 3, kuchi: 7, time: 7000 },
-        { name: "弐段", digits: 3, kuchi: 10, time: 10000 },
-        { name: "参段", digits: 3, kuchi: 10, time: 7000 },
-        { name: "四段", digits: 3, kuchi: 10, time: 5000 },
-        { name: "五段", digits: 3, kuchi: 10, time: 4500 },
-        { name: "六段", digits: 3, kuchi: 10, time: 4000 },
-        { name: "七段", digits: 3, kuchi: 10, time: 3500 },
-        { name: "八段", digits: 3, kuchi: 10, time: 3000 },
-        { name: "九段", digits: 3, kuchi: 15, time: 4000 },
-        { name: "十段", digits: 3, kuchi: 15, time: 3000 }
-      ]
-    }
-  };
+// Entities
+let enemies = [];
+let allies = [];
+let particles = [];
 
-  let currentAssocKey = 'flash_assoc';
-  let activeRule = ASSOCIATIONS.flash_assoc.rules[6]; // 6級
-  let isFlashingNumbers = false; // Flag: True during active problem number flashing (guards against visual overlays)
-
-  // ==================== GAME MODES (GRAND PRIX VS CERTIFICATION EXAM) ====================
-  let selectedGameMode = 'grandprix'; // 'grandprix' or 'exam'
-
-  window.selectGameMode = (mode) => {
-    selectedGameMode = mode;
-    const btnGp = document.getElementById('modeBtnGrandPrix');
-    const btnEx = document.getElementById('modeBtnExam');
-    const statusGp = document.getElementById('modeStatusGp');
-    const statusExam = document.getElementById('modeStatusExam');
-    const badge = document.getElementById('modeActiveBadge');
-    const desc = document.getElementById('modeDescText');
-    const startBtn = document.getElementById('startBtnMain');
-    
-    if (mode === 'grandprix') {
-      if (btnGp) btnGp.className = 'p-2.5 rounded-xl mode-card-active-gp text-left active:scale-95 transition-all cursor-pointer';
-      if (btnEx) btnEx.className = 'p-2.5 rounded-xl mode-card-inactive text-left active:scale-95 transition-all cursor-pointer';
-      if (statusGp) {
-        statusGp.textContent = '● えらび中';
-        statusGp.className = 'text-[9px] px-1.5 py-0.5 rounded-full font-black bg-pink-600 text-white shadow-[0_0_8px_#ec4899]';
-      }
-      if (statusExam) {
-        statusExam.textContent = 'タップで選択';
-        statusExam.className = 'text-[9px] px-1.5 py-0.5 rounded-full font-bold bg-slate-800 text-slate-400';
-      }
-      if (badge) {
-        badge.textContent = '🏎️ グランプリ中';
-        badge.className = 'text-[9px] px-2 py-0.5 rounded-full bg-pink-900 text-pink-200 border border-pink-400 font-black';
-      }
-      if (desc) desc.innerHTML = '<span>🏎️</span><span>コースを左右に運転して❓キューブをキャッチ！暗算正解で超加速ブースト！</span>';
-      if (startBtn) {
-        startBtn.innerHTML = '🏎️ レーススタート！ (3周勝負)';
-        startBtn.className = 'w-full btn-neon text-white font-black rounded-2xl py-3 px-4 flex items-center justify-center gap-2 text-lg sm:text-xl shadow-[0_0_30px_rgba(236,72,153,0.8)] animate-pulse border-pink-400 bg-gradient-to-r from-pink-500 to-purple-600';
-      }
-    } else {
-      if (btnEx) btnEx.className = 'p-2.5 rounded-xl mode-card-active-exam text-left active:scale-95 transition-all cursor-pointer';
-      if (btnGp) btnGp.className = 'p-2.5 rounded-xl mode-card-inactive text-left active:scale-95 transition-all cursor-pointer';
-      if (statusExam) {
-        statusExam.textContent = '● えらび中';
-        statusExam.className = 'text-[9px] px-1.5 py-0.5 rounded-full font-black bg-cyan-600 text-white shadow-[0_0_8px_#06b6d4]';
-      }
-      if (statusGp) {
-        statusGp.textContent = 'タップで選択';
-        statusGp.className = 'text-[9px] px-1.5 py-0.5 rounded-full font-bold bg-slate-800 text-slate-400';
-      }
-      if (badge) {
-        badge.textContent = '📝 けんてい中';
-        badge.className = 'text-[9px] px-2 py-0.5 rounded-full bg-cyan-900 text-cyan-200 border border-cyan-400 font-black';
-      }
-      if (desc) desc.innerHTML = '<span>📝</span><span>コースなしで集中！公式ルールの10問を連続で解いて合格認定証をもらおう！</span>';
-      if (startBtn) {
-        startBtn.innerHTML = '📝 けんていスタート！ (全10問)';
-        startBtn.className = 'w-full btn-neon text-white font-black rounded-2xl py-3 px-4 flex items-center justify-center gap-2 text-lg sm:text-xl shadow-[0_0_30px_rgba(6,182,212,0.8)] animate-pulse border-cyan-400 bg-gradient-to-r from-cyan-500 to-emerald-600';
-      }
-    }
-    playTap();
-  };
-
-  // ==================== MACHINES (JAPANESE LOCALIZATION) ====================
-  const MACHINES = [
-    { id: 'falcon', name: 'ブルーファルコン', enName: 'BLUE FALCON', rarity: '標準', spriteKey: 'blue', desc: 'バランス型・あつかいやすい万能マシン', color: '#0ea5e9', topSpeed: 1800, accel: 1.0, nitroBonus: 1.0, unlocked: true },
-    { id: 'vulcan', name: 'レッドバルカン', enName: 'RED VULCAN', rarity: 'レア', spriteKey: 'red', desc: '最高速特化型（トップスピード+25%）', color: '#ef4444', topSpeed: 2200, accel: 0.85, nitroBonus: 1.1, unlocked: false },
-    { id: 'phoenix', name: 'ゴールデンフェニックス', enName: 'GOLDEN PHOENIX', rarity: 'SSR', spriteKey: 'yellow', desc: '超加速型（ロケットブースト効果+50%）', color: '#f59e0b', topSpeed: 1950, accel: 1.25, nitroBonus: 1.5, unlocked: false },
-    { id: 'viper', name: 'エメラルドバイパー', enName: 'EMERALD VIPER', rarity: 'レア', spriteKey: 'green', desc: '防御安定型（さいしょからバリア1回付き）', color: '#10b981', topSpeed: 1750, accel: 1.1, nitroBonus: 1.0, shieldInit: 1, unlocked: false }
-  ];
-
-  let currentMachine = MACHINES[0];
-  let playerPoints = 1250;
-  let playerCores = 120;
-  let itemsInventory = { nitro: 1, warp: 1, shield: 1 };
-  let activeShield = 0;
-  let activeWarpUsed = false;
-  let activeNitroUsed = false;
-
-  // Stats
-  let answerTimes = [];
-  let nitroTriggers = 0;
-  let totalAnswers = 0;
-  let correctAnswers = 0;
-  let maxCombo = 0;
-  let inputStartTime = 0;
-  let nitroTimerInterval = null;
-
-  // DOM Elements
-  const gameFrame = document.getElementById('gameFrame');
-  const lobbyScreen = document.getElementById('lobbyScreen');
-  const gameScreen = document.getElementById('gameScreen');
-  const victoryScreen = document.getElementById('victoryScreen');
-  const garageModal = document.getElementById('garageModal');
-  const diffSlider = document.getElementById('diffSlider');
-  const diffDisplay = document.getElementById('diffDisplay');
-  const ingameLevel = document.getElementById('ingameLevel');
-  const equationEl = document.getElementById('equation');
-  const inputArea = document.getElementById('inputArea');
-  const answerDisplay = document.getElementById('answerDisplay');
-  const feedbackEl = document.getElementById('feedback');
-  const speedEl = document.getElementById('speed');
-  const progressText = document.getElementById('progressText');
-  const zoneBadge = document.getElementById('zoneBadge');
-  const autoPlayToggle = document.getElementById('autoPlayToggle');
-  const autoPlayIndicator = document.getElementById('autoPlayIndicator');
-  const goBtn = document.getElementById('goBtn');
-  const playerPointsEl = document.getElementById('playerPoints');
-  const playerCoresEl = document.getElementById('playerCores');
-  const livePositionBadge = document.getElementById('livePositionBadge');
-  const nitroTimerBar = document.getElementById('nitroTimerBar');
-  const shieldIndicator = document.getElementById('shieldIndicator');
-  const itemNoticeBanner = document.getElementById('itemNoticeBanner');
-
-  // Exam DOM Elements
-  const trackContainer = document.getElementById('trackContainer');
-  const examContainer = document.getElementById('examContainer');
-  const grandPrixEquationArea = document.getElementById('grandPrixEquationArea');
-  const examCountdownText = document.getElementById('examCountdownText');
-  const examEquation = document.getElementById('examEquation');
-  const examFeedbackText = document.getElementById('examFeedbackText');
-  const examAnswerDisplay = document.getElementById('examAnswerDisplay');
-  const examScoreLive = document.getElementById('examScoreLive');
-  const examPillsGrid = document.getElementById('examPillsGrid');
-  const hudModeBadge = document.getElementById('hudModeBadge');
-  const gpProgressBadge = document.getElementById('gpProgressBadge');
-  const examProgressBadge = document.getElementById('examProgressBadge');
-  const examQNum = document.getElementById('examQNum');
-  const inGameItemBar = document.getElementById('inGameItemBar');
-
-  let isPlaying = false, isGoal = false;
-  let speed = 120, targetSpeed = 120;
-  let numbers = [], expectedSum = 0, flashIndex = 0, playerInput = "";
-  let combo = 0;
-
-  // Grand Prix specific states
-  let currentLap = 1;
-  const totalLaps = 3;
-  const lapLength = 120; // 120 dist per lap (total 360 dist for 3 laps)
-  let isQuestionActive = false; // True when answering a question item in Grand Prix
-
-  // Exam specific states
-  let currentExamQuestion = 1;
-  let examTotalQuestions = 10;
-  let examResults = []; // true/false for each question
-  let isAutoPlay = false;
-
-  // ==================== PHYSICS & GRAPHICS ENGINE ====================
-  const canvas = document.getElementById('raceCanvas');
-  const ctx = canvas.getContext('2d');
-  let trackDistance = 0;
-  let currentCurve = 0;
-  let targetCurve = 0;
-  let particles = [];
-  let stars = [];
-  let dashPlates = [];
-  let questionItems = [];
-  let overheadGates = [];
-  let warpSpeedLines = [];
-
-  // Distant Cyber City Skyline Silhouettes
-  const SKYLINE_BUILDINGS = [
-    { x: -330, w: 55, h: 85, wins: [[10,15],[25,35],[15,55]] },
-    { x: -270, w: 75, h: 130, wins: [[15,20],[35,45],[55,75],[25,100]] },
-    { x: -190, w: 45, h: 75, wins: [[8,15],[22,35]] },
-    { x: -140, w: 85, h: 165, wins: [[15,25],[40,60],[65,100],[30,135]] },
-    { x: -45, w: 60, h: 100, wins: [[12,25],[30,55],[15,75]] },
-    { x: 25, w: 95, h: 180, wins: [[18,30],[45,75],[70,120],[35,150]] },
-    { x: 130, w: 50, h: 90, wins: [[10,20],[25,50]] },
-    { x: 190, w: 80, h: 140, wins: [[15,25],[38,65],[58,105]] },
-    { x: 280, w: 65, h: 110, wins: [[12,22],[32,55]] },
-    { x: 355, w: 85, h: 150, wins: [[18,30],[45,75],[65,115]] }
-  ];
-
-  function initStarfield() {
-    stars = Array.from({length: 65}, () => ({
-      x: (Math.random() - 0.5) * 550,
-      y: Math.random() * 130,
-      z: Math.random() * 800 + 100,
-      size: Math.random() * 1.5 + 0.8
-    }));
-  }
-  initStarfield();
-
-  // 4 Racers - Continuous Lateral Freedom & Dynamic Spacing
-  const racers = [
-    {
-      id: 'player', name: 'あなた (YOU)', isPlayer: true,
-      dist: 0, speed: 120, boostVel: 0,
-      lateralPos: 0, targetLateral: 0, lateralVel: 0, bank: 0,
-      spriteKey: 'blue', flameColor: '#38bdf8', statusText: '', statusTimer: 0
-    },
-    {
-      id: 'r1', name: 'レッドバルカン', isPlayer: false,
-      dist: 35, speed: 110, boostVel: 0,
-      lateralPos: 0.50, targetLateral: 0.50, lateralVel: 0, bank: 0,
-      spriteKey: 'red', flameColor: '#f97316',
-      baseSpeed: 105, thinkTimer: 80, missRate: 0.16, statusText: '', statusTimer: 0
-    },
-    {
-      id: 'r2', name: 'ゴールドホーネット', isPlayer: false,
-      dist: 22, speed: 95, boostVel: 0,
-      lateralPos: -0.50, targetLateral: -0.50, lateralVel: 0, bank: 0,
-      spriteKey: 'yellow', flameColor: '#facc15',
-      baseSpeed: 96, thinkTimer: 110, missRate: 0.08, statusText: '', statusTimer: 0
-    },
-    {
-      id: 'r3', name: 'エメラルドバイパー', isPlayer: false,
-      dist: 12, speed: 85, boostVel: 0,
-      lateralPos: 0.20, targetLateral: 0.20, lateralVel: 0, bank: 0,
-      spriteKey: 'green', flameColor: '#10b981',
-      baseSpeed: 88, thinkTimer: 95, missRate: 0.12, statusText: '', statusTimer: 0
-    }
-  ];
-
-  function resizeCanvas() {
-    if (!canvas) return;
-    const rect = canvas.getBoundingClientRect();
-    canvas.width = rect.width;
-    canvas.height = rect.height;
-  }
-  window.addEventListener('resize', resizeCanvas);
-
-  // Generate Dash Plates on track
-  function initDashPlates() {
-    dashPlates = [];
-    const presets = [-0.60, -0.28, 0.0, 0.28, 0.60];
-    for (let d = 36; d < 2600; d += 34) {
-      const pick = presets[Math.floor(Math.random() * presets.length)] + (Math.random() * 0.10 - 0.05);
-      dashPlates.push({
-        dist: d,
-        lateral: Math.max(-0.68, Math.min(0.68, pick)),
-        hitByPlayer: false
-      });
-    }
-  }
-
-  // Generate 3D-styled Question Items (❓キューブ) along track
-  function initQuestionItems() {
-    questionItems = [];
-    const presets = [-0.55, -0.25, 0.0, 0.25, 0.55];
-    for (let d = 22; d < 2600; d += 28) {
-      const pick = presets[Math.floor(Math.random() * presets.length)] + (Math.random() * 0.12 - 0.06);
-      questionItems.push({
-        dist: d,
-        lateral: Math.max(-0.66, Math.min(0.66, pick)),
-        rot: Math.random() * Math.PI * 2,
-        collected: false
-      });
-    }
-  }
-
-  // Generate Overhead Futuristic Energy Gates
-  function initOverheadGates() {
-    overheadGates = [];
-    for (let d = 48; d < 2600; d += 60) {
-      overheadGates.push({ dist: d });
-    }
-  }
-
-  // ==================== STEERING INPUT HANDLING ====================
-  let steerLeftPressed = false;
-  let steerRightPressed = false;
-  let isDraggingTrack = false;
-
-  function setupSteerControls() {
-    const leftBtn = document.getElementById('steerLeftBtn');
-    const rightBtn = document.getElementById('steerRightBtn');
-
-    if (leftBtn) {
-      const setLeft = (v) => { steerLeftPressed = v; leftBtn.classList.toggle('active-touch', v); };
-      leftBtn.onpointerdown = (e) => { e.preventDefault(); setLeft(true); playTap(); };
-      leftBtn.onpointerup = () => setLeft(false);
-      leftBtn.onpointercancel = () => setLeft(false);
-      leftBtn.onpointerleave = () => setLeft(false);
+// --- Entities Classes ---
+class Unit {
+    constructor(x, y, color, isEnemy) {
+        this.x = x;
+        this.y = y;
+        this.radius = isEnemy ? 4 : 3.5;
+        this.color = color;
+        this.isEnemy = isEnemy;
+        // Jitter for movement
+        this.vx = (Math.random() - 0.5) * 0.5;
+        // Base speed
+        this.vy = isEnemy ? (0.5 + Math.random() * 0.5) : -(2.5 + Math.random() * 1.5);
+        this.dead = false;
     }
 
-    if (rightBtn) {
-      const setRight = (v) => { steerRightPressed = v; rightBtn.classList.toggle('active-touch', v); };
-      rightBtn.onpointerdown = (e) => { e.preventDefault(); setRight(true); playTap(); };
-      rightBtn.onpointerup = () => setRight(false);
-      rightBtn.onpointercancel = () => setRight(false);
-      rightBtn.onpointerleave = () => setRight(false);
-    }
-  }
-  setupSteerControls();
-
-  function updatePlayerSteerFromPointer(clientX) {
-    if (!isPlaying || selectedGameMode !== 'grandprix') return;
-    const rect = canvas.getBoundingClientRect();
-    if (rect.width <= 0) return;
-    const normX = (clientX - rect.left) / rect.width;
-    const steerTarget = (normX - 0.5) * 1.6;
-    racers[0].targetLateral = Math.max(-0.75, Math.min(0.75, steerTarget));
-  }
-
-  canvas.addEventListener('pointerdown', (e) => {
-    isDraggingTrack = true;
-    updatePlayerSteerFromPointer(e.clientX);
-  });
-  window.addEventListener('pointermove', (e) => {
-    if (isDraggingTrack) updatePlayerSteerFromPointer(e.clientX);
-  });
-  window.addEventListener('pointerup', () => { isDraggingTrack = false; });
-  window.addEventListener('pointercancel', () => { isDraggingTrack = false; });
-
-  // Keyboard Steering
-  window.addEventListener('keydown', (e) => {
-    if (!isPlaying) return;
-    if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
-      racers[0].targetLateral = Math.max(-0.75, racers[0].targetLateral - 0.28);
-    } else if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
-      racers[0].targetLateral = Math.min(0.75, racers[0].targetLateral + 0.28);
-    }
-  });
-
-  // ==================== GRAPHICAL TRACK RENDERING ====================
-  function drawCurvedTrack() {
-    if (!isPlaying || selectedGameMode !== 'grandprix') return;
-    const w = canvas.width;
-    const h = canvas.height;
-    if (w === 0 || h === 0) {
-      requestAnimationFrame(drawCurvedTrack);
-      return;
+    update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        
+        // Keep in bounds horizontally
+        if (this.x < 0) this.x = 0;
+        if (this.x > cw) this.x = cw;
     }
 
-    ctx.clearRect(0, 0, w, h);
-    const st = STAGES[currentStageIndex];
-
-    // Apply button steering input smoothly
-    if (steerLeftPressed) racers[0].targetLateral = Math.max(-0.75, racers[0].targetLateral - 0.045);
-    if (steerRightPressed) racers[0].targetLateral = Math.min(0.75, racers[0].targetLateral + 0.045);
-
-    // Track progression & dynamic curve geometry
-    trackDistance += speed * 0.055;
-    targetCurve = Math.sin(trackDistance * 0.003) * 130 + Math.sin(trackDistance * 0.0012) * 85;
-    currentCurve += (targetCurve - currentCurve) * 0.05;
-
-    // Lap progress update in Grand Prix
-    const playerDist = racers[0].dist;
-    const calculatedLap = Math.min(totalLaps, Math.floor(playerDist / lapLength) + 1);
-    if (calculatedLap !== currentLap) {
-      currentLap = calculatedLap;
-      progressText.textContent = `${currentLap} / ${totalLaps} 周`;
-      if (currentLap === totalLaps) {
-        feedbackEl.innerHTML = '<div class="warp-banner italic text-yellow-300">🏁 ファイナルラップ！</div>';
-        setTimeout(() => { if (feedbackEl.textContent.includes('ファイナル')) feedbackEl.innerHTML = ''; }, 1200);
-      }
-    }
-
-    const horizonY = 16;
-    const bottomY = h;
-    const topRoadW = w * 0.38;
-    const bottomRoadW = w * 0.92;
-
-    // Layer 1: Background Sky Gradient
-    const bgGrad = ctx.createLinearGradient(0, 0, 0, h);
-    bgGrad.addColorStop(0, st.skyTop);
-    bgGrad.addColorStop(0.35, st.skyMid);
-    bgGrad.addColorStop(1, st.skyBottom);
-    ctx.fillStyle = bgGrad;
-    ctx.fillRect(0, 0, w, h);
-
-    // Layer 2: Distant Horizon Cyber City Skyline Silhouettes
-    SKYLINE_BUILDINGS.forEach(b => {
-      const bx = w / 2 + b.x + currentCurve * 0.35;
-      const bw = b.w * 0.45;
-      const bh = b.h * 0.45;
-      const by = horizonY - bh + 14;
-      
-      // Building silhouette
-      ctx.fillStyle = '#060d24';
-      ctx.fillRect(bx, by, bw, bh);
-      ctx.strokeStyle = st.ambientColor;
-      ctx.lineWidth = 1;
-      ctx.strokeRect(bx, by, bw, bh);
-
-      // Lit Cyber Windows
-      ctx.fillStyle = st.curb2;
-      b.wins.forEach(win => {
-        const wx = bx + (win[0] * 0.45) % (bw - 6) + 3;
-        const wy = by + (win[1] * 0.45) % (bh - 6) + 3;
-        ctx.fillRect(wx, wy, 2, 2);
-      });
-      // Antenna beacon
-      ctx.fillStyle = st.curb1;
-      ctx.fillRect(bx + bw / 2 - 0.75, by - 5, 1.5, 5);
-      ctx.fillRect(bx + bw / 2 - 2, by - 7, 4, 2);
-    });
-
-    // Layer 3: Parallax Starfield / Twinkling Space Dust
-    stars.forEach(s => {
-      s.y += (speed / 320);
-      if (s.y > horizonY + 20) s.y = 0;
-      const px = w / 2 + s.x + currentCurve * 0.22;
-      const py = s.y;
-      if (px >= 0 && px <= w && py >= 0 && py <= h) {
-        ctx.fillStyle = st.ambientColor;
-        ctx.fillRect(px, py, s.size, s.size);
-      }
-    });
-
-    // Layer 4: High-Speed Warp Streaks (When Speed > 300)
-    if (speed > 280) {
-      const warpIntensity = Math.min(1.0, (speed - 280) / 400);
-      ctx.strokeStyle = st.ambientColor;
-      ctx.globalAlpha = 0.4 * warpIntensity;
-      ctx.lineWidth = 1.5;
-      for (let sl = 0; sl < 12; sl++) {
-        const ang = (sl / 12) * Math.PI * 2;
-        const r1 = 30;
-        const r2 = 180 + Math.random() * 80;
-        const cxH = w / 2 + currentCurve * 0.5;
+    draw(ctx) {
         ctx.beginPath();
-        ctx.moveTo(cxH + Math.cos(ang) * r1, horizonY + Math.sin(ang) * (r1 * 0.4));
-        ctx.lineTo(cxH + Math.cos(ang) * r2, horizonY + Math.sin(ang) * (r2 * 0.4));
-        ctx.stroke();
-      }
-      ctx.globalAlpha = 1.0;
-    }
-
-    // Layer 5: Curved Road Slices with Perspective Cyber Grid
-    const slices = 36;
-    const sliceH = (bottomY - horizonY) / slices;
-
-    for (let i = slices; i >= 0; i--) {
-      const y1 = horizonY + i * sliceH;
-      const y2 = y1 + sliceH;
-      const t1 = i / slices;
-      const t2 = (i + 1) / slices;
-
-      const rw1 = topRoadW + (bottomRoadW - topRoadW) * Math.pow(t1, 1.35);
-      const rw2 = topRoadW + (bottomRoadW - topRoadW) * Math.pow(t2, 1.35);
-
-      const curveOff1 = (1 - t1) * (1 - t1) * currentCurve;
-      const curveOff2 = (1 - t2) * (1 - t2) * currentCurve;
-
-      const cx1 = w / 2 + curveOff1;
-      const cx2 = w / 2 + curveOff2;
-
-      // Road Surface (Dark asphalt / cyber floor)
-      ctx.fillStyle = (i % 2 === 0) ? st.roadLight : st.roadDark;
-      ctx.beginPath();
-      ctx.moveTo(cx1 - rw1 / 2, y1);
-      ctx.lineTo(cx1 + rw1 / 2, y1);
-      ctx.lineTo(cx2 + rw2 / 2, y2);
-      ctx.lineTo(cx2 - rw2 / 2, y2);
-      ctx.closePath();
-      ctx.fill();
-
-      // Cyber Grid perspective stripes on road surface
-      ctx.strokeStyle = st.ambientColor;
-      ctx.globalAlpha = 0.16;
-      ctx.lineWidth = 1;
-      [-0.5, -0.25, 0.25, 0.5].forEach(gx => {
-        const lx1 = cx1 + gx * (rw1 * 0.48);
-        const lx2 = cx2 + gx * (rw2 * 0.48);
-        ctx.beginPath();
-        ctx.moveTo(lx1, y1);
-        ctx.lineTo(lx2, y2);
-        ctx.stroke();
-      });
-      ctx.globalAlpha = 1.0;
-
-      // Neon Curbs (Glowing Barrier Edge Stripes)
-      const curbColor = (Math.floor(trackDistance * 0.14 + i) % 2 === 0) ? st.curb1 : st.curb2;
-      ctx.fillStyle = curbColor;
-      ctx.fillRect(cx1 - rw1 / 2 - 6, y1, 6, sliceH);
-      ctx.fillRect(cx1 + rw1 / 2, y1, 6, sliceH);
-
-      // Center glowing speed guide
-      const centerPulse = Math.floor(trackDistance * 0.22 + i) % 3 !== 0;
-      if (centerPulse) {
-        ctx.fillStyle = st.laneColor;
-        ctx.fillRect(cx1 - 2, y1, 4, sliceH);
-      }
-
-      // Neon Speed Chevrons embedded in road
-      if ((Math.floor(trackDistance * 0.12 + i)) % 5 === 0 && t1 > 0.15) {
-        ctx.fillStyle = st.ambientColor;
-        ctx.globalAlpha = 0.45;
-        ctx.beginPath();
-        ctx.moveTo(cx1, y1);
-        ctx.lineTo(cx1 - 8 * t1, y1 + 5 * t1);
-        ctx.lineTo(cx1 + 8 * t1, y1 + 5 * t1);
-        ctx.closePath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fillStyle = this.color;
         ctx.fill();
+        // Add glow
+        ctx.shadowBlur = 5;
+        ctx.shadowColor = this.color;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+    }
+}
+
+class Particle {
+    constructor(x, y, color) {
+        this.x = x;
+        this.y = y;
+        this.vx = (Math.random() - 0.5) * 6;
+        this.vy = (Math.random() - 0.5) * 6;
+        this.life = 1.0;
+        this.decay = 0.02 + Math.random() * 0.03;
+        this.color = color;
+    }
+    update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        this.life -= this.decay;
+    }
+    draw(ctx) {
+        ctx.globalAlpha = Math.max(0, this.life);
+        ctx.fillStyle = this.color;
+        ctx.fillRect(this.x, this.y, 2, 2);
         ctx.globalAlpha = 1.0;
-      }
-
-      // Cyber City Pillars / Canyon Arches on road perimeter
-      if (i % 6 === 0) {
-        const pHeight = 24 * t1;
-        ctx.fillStyle = st.pillarColor;
-        ctx.fillRect(cx1 - rw1 / 2 - 14 * t1, y1 - pHeight, 3.5 * t1, pHeight);
-        ctx.fillRect(cx1 + rw1 / 2 + 10 * t1, y1 - pHeight, 3.5 * t1, pHeight);
-      }
     }
+}
 
-    // Layer 6: Overhead Futuristic Energy Gates
-    overheadGates.forEach(og => {
-      const distDiff = og.dist - racers[0].dist;
-      let t = 0.70 - (distDiff * 0.0055);
-      if (t >= 0.08 && t <= 0.98) {
-        const rw = topRoadW + (bottomRoadW - topRoadW) * Math.pow(t, 1.35);
-        const curveOff = (1 - t) * (1 - t) * currentCurve;
-        const cx = w / 2 + curveOff;
-        const cy = horizonY + (bottomY - horizonY) * t;
-        const archH = 55 * Math.pow(t, 1.25);
-        const archW = rw * 1.08;
+// --- Game Logic ---
 
-        ctx.save();
-        ctx.strokeStyle = st.curb2;
-        ctx.lineWidth = Math.max(2, 4 * t);
-        ctx.shadowColor = st.curb2;
-        ctx.shadowBlur = 12 * t;
-        ctx.beginPath();
-        ctx.moveTo(cx - archW / 2, cy);
-        ctx.lineTo(cx - archW / 2, cy - archH);
-        ctx.lineTo(cx + archW / 2, cy - archH);
-        ctx.lineTo(cx + archW / 2, cy);
-        ctx.stroke();
+function showTitle() {
+    state = 'TITLE';
+    document.getElementById('title-screen').classList.remove('hidden');
+    document.getElementById('result-screen').classList.add('hidden');
+    document.getElementById('hud').classList.add('hidden');
+    document.getElementById('numpad-section').classList.add('hidden');
+    enemies = [];
+    allies = [];
+    particles = [];
+}
 
-        // Crossbeam energy core
-        if (t > 0.25) {
-          ctx.fillStyle = st.curb1;
-          ctx.fillRect(cx - archW * 0.35, cy - archH - 3 * t, archW * 0.7, 5 * t);
-        }
-        ctx.restore();
-      }
-    });
+function startGame(levelStr, numCount, speedMs) {
+    let digits = 1;
+    if(levelStr === 2) digits = 2;
+    if(levelStr === 3) digits = 3;
 
-    // Layer 7: Dash Plates (ダッシュプレート)
-    dashPlates.forEach(dp => {
-      const distDiff = dp.dist - racers[0].dist;
-      let t = 0.70 - (distDiff * 0.0055);
-      if (t >= 0.12 && t <= 0.95) {
-        const rw = topRoadW + (bottomRoadW - topRoadW) * Math.pow(t, 1.35);
-        const curveOff = (1 - t) * (1 - t) * currentCurve;
-        const cx = w / 2 + curveOff;
-        const cy = horizonY + (bottomY - horizonY) * t;
-        const plateX = cx + (dp.lateral * (rw * 0.46));
-
-        ctx.save();
-        ctx.translate(plateX, cy);
-        const pScale = (0.35 + t * 0.65);
-        ctx.scale(pScale, pScale);
-        ctx.fillStyle = '#fde047';
-        ctx.shadowColor = '#facc15';
-        ctx.shadowBlur = 15;
-        ctx.beginPath();
-        ctx.moveTo(0, -14);
-        ctx.lineTo(16, 4);
-        ctx.lineTo(10, 8);
-        ctx.lineTo(0, -2);
-        ctx.lineTo(-10, 8);
-        ctx.lineTo(-16, 4);
-        ctx.closePath();
-        ctx.fill();
-        ctx.restore();
-
-        // Collision Check with Player & Rivals
-        racers.forEach(r => {
-          if (Math.abs(r.dist - dp.dist) < 3.2 && Math.abs(r.lateralPos - dp.lateral) < 0.28) {
-            r.boostVel += 400;
-            if (r.isPlayer && !dp.hitByPlayer) {
-              dp.hitByPlayer = true;
-              playDashPlateSound();
-              if (!isFlashingNumbers) {
-                screenFlash('rgba(250, 204, 21, 0.5)');
-                feedbackEl.innerHTML = '<div class="nitro-text italic text-yellow-300">⚡ ダッシュ！ +400 km/h</div>';
-                setTimeout(() => { if (feedbackEl.textContent.includes('ダッシュ')) feedbackEl.innerHTML = ''; }, 700);
-              }
-            }
-          }
-        });
-      }
-    });
-
-    // Layer 8: 3D Rotating Question Cubes (❓暗算アイテム)
-    questionItems.forEach(qi => {
-      if (qi.collected) return;
-      const distDiff = qi.dist - racers[0].dist;
-      let t = 0.70 - (distDiff * 0.0055);
-      if (t >= 0.10 && t <= 0.96) {
-        const rw = topRoadW + (bottomRoadW - topRoadW) * Math.pow(t, 1.35);
-        const curveOff = (1 - t) * (1 - t) * currentCurve;
-        const cx = w / 2 + curveOff;
-        const cy = horizonY + (bottomY - horizonY) * t;
-        const qx = cx + (qi.lateral * (rw * 0.46));
-        const qScale = (0.40 + t * 0.80);
-
-        qi.rot += 0.04;
-        const bobY = Math.sin(Date.now() * 0.005 + qi.dist) * 6 * qScale;
-
-        ctx.save();
-        ctx.translate(qx, cy - 20 * qScale + bobY);
-        ctx.scale(qScale, qScale);
-        
-        // Glowing aura
-        ctx.shadowColor = '#facc15';
-        ctx.shadowBlur = 18;
-        
-        // Rotating 3D Diamond / Cube
-        const cosR = Math.cos(qi.rot);
-        const boxSize = 15;
-
-        // Cube Body
-        ctx.fillStyle = 'rgba(250, 204, 21, 0.35)';
-        ctx.strokeStyle = '#fef08a';
-        ctx.lineWidth = 2.5;
-        ctx.beginPath();
-        ctx.moveTo(cosR * boxSize, -boxSize);
-        ctx.lineTo(boxSize, 0);
-        ctx.lineTo(-cosR * boxSize, boxSize);
-        ctx.lineTo(-boxSize, 0);
-        ctx.closePath();
-        ctx.fill();
-        ctx.stroke();
-
-        // Center Question Mark
-        ctx.fillStyle = '#ffffff';
-        ctx.font = '900 16px "M PLUS Rounded 1c", Orbitron, sans-serif';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText('?', 0, 1);
-        ctx.restore();
-
-        // Collision detection with player!
-        if (Math.abs(racers[0].dist - qi.dist) < 3.2 && Math.abs(racers[0].lateralPos - qi.lateral) < 0.32) {
-          qi.collected = true;
-          playDashPlateSound();
-          spawnContactSparks(qi.lateral, qi.dist);
-          triggerGrandPrixQuestion();
-        }
-      }
-    });
-
-    // Layer 9: CP Thinking & Mental Math Simulation
-    racers.forEach(r => {
-      if (!r.isPlayer) {
-        r.thinkTimer--;
-        if (r.thinkTimer <= 0) {
-          r.thinkTimer = Math.floor(Math.random() * 65) + 55;
-          const roll = Math.random();
-          
-          if (roll < r.missRate) {
-            r.statusText = '💥 ミス!';
-            r.statusTimer = 45;
-            r.boostVel = -220;
-            spawnSparks(r);
-          } else if (roll < r.missRate + 0.28) {
-            r.statusText = '⚡ ブースト!';
-            r.statusTimer = 40;
-            r.boostVel = 480;
-            r.targetLateral = (Math.random() * 1.4 - 0.7);
-          } else {
-            r.statusText = '▲ かそく';
-            r.statusTimer = 35;
-            r.boostVel = 260;
-            if (Math.random() > 0.35) r.targetLateral = (Math.random() * 1.4 - 0.7);
-          }
-        }
-
-        // CP targeting of dash plates
-        if (Math.random() < 0.04) {
-          const nextPlate = dashPlates.find(dp => dp.dist > r.dist && dp.dist - r.dist < 32);
-          if (nextPlate) r.targetLateral = nextPlate.lateral;
-        }
-      }
-
-      // Smooth Velocity Physics
-      r.speed += ( (r.isPlayer ? targetSpeed : r.baseSpeed) - r.speed ) * 0.08;
-      r.boostVel *= 0.94;
-      const effectiveSpeed = Math.max(30, r.speed + r.boostVel);
-      r.dist += (effectiveSpeed / 2400);
-      if (r.isPlayer) speed = effectiveSpeed;
-
-      // Smooth Lateral Steering
-      const latDiff = r.targetLateral - r.lateralPos;
-      r.lateralVel += (latDiff * 0.06 - r.lateralVel) * 0.20;
-      r.lateralPos += r.lateralVel;
-
-      // Centrifugal drift on curves & hovercraft bank
-      r.lateralPos -= currentCurve * 0.00015;
-      r.bank = (r.lateralVel * -240) - (currentCurve * 0.08);
-      if (r.statusTimer > 0) r.statusTimer--;
-    });
-
-    // Layer 10: Proactive Overtaking AI
-    racers.forEach(r => {
-      racers.forEach(other => {
-        if (other !== r) {
-          const dGap = other.dist - r.dist;
-          if (dGap > 0 && dGap < 16) {
-            const lGap = Math.abs(r.lateralPos - other.lateralPos);
-            if (lGap < 0.44) {
-              if (other.lateralPos > 0) r.targetLateral = Math.max(-0.72, other.lateralPos - 0.50);
-              else r.targetLateral = Math.min(0.72, other.lateralPos + 0.50);
-            }
-          }
-        }
-      });
-    });
-
-    // Layer 11: Pairwise Collision Repulsion (Never overlap)
-    const MIN_DIST_GAP = 7.5;
-    const MIN_LAT_GAP = 0.40;
-
-    for (let i = 0; i < racers.length; i++) {
-      for (let j = i + 1; j < racers.length; j++) {
-        const r1 = racers[i];
-        const r2 = racers[j];
-        const dGap = Math.abs(r1.dist - r2.dist);
-        const lGap = Math.abs(r1.lateralPos - r2.lateralPos);
-
-        if (dGap < MIN_DIST_GAP && lGap < MIN_LAT_GAP) {
-          const latOverlap = MIN_LAT_GAP - lGap;
-          let pushDir = Math.sign(r1.lateralPos - r2.lateralPos);
-          if (pushDir === 0) pushDir = (i % 2 === 0) ? 1 : -1;
-
-          const pushForce = Math.max(0.03, latOverlap * 0.5);
-          r1.lateralPos += pushDir * pushForce;
-          r2.lateralPos -= pushDir * pushForce;
-          r1.targetLateral += pushDir * 0.3;
-          r2.targetLateral -= pushDir * 0.3;
-          r1.lateralVel += pushDir * 0.015;
-          r2.lateralVel -= pushDir * 0.015;
-
-          if (r1.dist > r2.dist) { r1.boostVel += 15; r2.boostVel -= 15; }
-          else { r1.boostVel -= 15; r2.boostVel += 15; }
-
-          if (Math.random() < 0.35) spawnContactSparks((r1.lateralPos + r2.lateralPos) * 0.5, (r1.dist + r2.dist) * 0.5);
-        }
-      }
-    }
-
-    // Keep all crafts strictly within track rails
-    racers.forEach(r => {
-      const TRACK_BORDER = 0.76;
-      if (r.lateralPos < -TRACK_BORDER) {
-        r.lateralPos = -TRACK_BORDER;
-        r.lateralVel = Math.abs(r.lateralVel) * 0.5;
-        r.targetLateral = -TRACK_BORDER + 0.25;
-        if (Math.random() < 0.25) spawnContactSparks(-TRACK_BORDER, r.dist);
-      } else if (r.lateralPos > TRACK_BORDER) {
-        r.lateralPos = TRACK_BORDER;
-        r.lateralVel = -Math.abs(r.lateralVel) * 0.5;
-        r.targetLateral = TRACK_BORDER - 0.25;
-        if (Math.random() < 0.25) spawnContactSparks(TRACK_BORDER, r.dist);
-      }
-      r.targetLateral = Math.max(-TRACK_BORDER, Math.min(TRACK_BORDER, r.targetLateral));
-    });
-
-    // Update Speedometer
-    if (speedEl) speedEl.textContent = Math.floor(racers[0].speed + racers[0].boostVel);
-
-    // Leaderboard
-    const sorted = [...racers].sort((a,b) => b.dist - a.dist);
-    const playerRank = sorted.findIndex(r => r.isPlayer) + 1;
-    if (livePositionBadge) {
-      livePositionBadge.textContent = `${playerRank}位`;
-      if (playerRank === 1) livePositionBadge.className = 'glass-panel px-2 py-0.5 rounded-full border-yellow-400 text-yellow-400 font-black text-xs shadow-[0_0_10px_#eab308]';
-      else if (playerRank === 2) livePositionBadge.className = 'glass-panel px-2 py-0.5 rounded-full border-cyan-400 text-cyan-400 font-black text-xs';
-      else livePositionBadge.className = 'glass-panel px-2 py-0.5 rounded-full border-slate-500 text-slate-300 font-black text-xs';
-    }
-
-    // Layer 12: Render Racers (Back to Front)
-    const renderOrder = [...racers].sort((a,b) => b.dist - a.dist);
-    renderOrder.forEach(r => {
-      const distDiff = r.dist - racers[0].dist;
-      let t = 0.70 - (distDiff * 0.0055);
-      t = Math.max(0.12, Math.min(0.92, t));
-
-      const rw = topRoadW + (bottomRoadW - topRoadW) * Math.pow(t, 1.35);
-      const curveOff = (1 - t) * (1 - t) * currentCurve;
-      const cx = w / 2 + curveOff;
-      const cy = horizonY + (bottomY - horizonY) * t;
-      const carX = cx + (r.lateralPos * (rw * 0.46));
-      const scale = 0.30 + (t * 0.70);
-      drawFZeroMachine(ctx, carX, cy, scale, r);
-    });
-
-    // Draw active sparks
-    drawParticles(ctx);
-
-    // Check Grand Prix Finish: Lap 3 Goal
-    if (playerDist >= totalLaps * lapLength && !isGoal) {
-      isGoal = true;
-      vibrate([100, 100, 150]);
-      screenFlash('rgba(255, 255, 255, 1)');
-      feedbackEl.innerHTML = `<div class="nitro-text italic text-yellow-400">🏁 ゴールイン！！ 優勝！！</div>`;
-      targetSpeed = 2600;
-      racers[0].boostVel = 1200;
-      setTimeout(() => endRace(true), 2200);
-      return;
-    }
-
-    requestAnimationFrame(drawCurvedTrack);
-  }
-
-  // Draw 4K F-Zero Craft Sprite with Optical Shadow & Jet Flame
-  function drawFZeroMachine(c, x, y, scale, racer) {
-    c.save();
-    c.translate(x, y);
-    c.rotate((racer.bank * Math.PI) / 180);
-
-    const sprite = CRAFT_SPRITES[racer.spriteKey];
-    const isPlayer = racer.isPlayer;
-
-    // Optical Ground Shadow
-    c.fillStyle = 'rgba(0, 0, 0, 0.55)';
-    c.beginPath();
-    c.ellipse(0, 16 * scale, 36 * scale, 12 * scale, 0, 0, Math.PI * 2);
-    c.fill();
-
-    // Twin Plasma Afterburners
-    const boostActive = racer.boostVel > 100;
-    const flameH = (Math.random() * 20 + 25) * (boostActive ? 2.2 : 1.1) * scale;
-    c.fillStyle = racer.flameColor;
-    c.shadowColor = racer.flameColor;
-    c.shadowBlur = boostActive ? 25 : 12;
+    config = { digits, count: numCount, speed: speedMs };
+    wave = 1;
+    hp = 100;
     
-    // Left thruster
-    c.beginPath();
-    c.moveTo(-16 * scale, 30 * scale);
-    c.lineTo(-12 * scale, (30 * scale) + flameH);
-    c.lineTo(-8 * scale, 30 * scale);
-    c.closePath();
-    c.fill();
-    // Right thruster
-    c.beginPath();
-    c.moveTo(8 * scale, 30 * scale);
-    c.lineTo(12 * scale, (30 * scale) + flameH);
-    c.lineTo(16 * scale, 30 * scale);
-    c.closePath();
-    c.fill();
-    c.shadowBlur = 0;
-
-    // Draw Craft Sprite
-    if (sprite.complete && sprite.naturalWidth > 0) {
-      c.save();
-      c.globalCompositeOperation = 'screen';
-      const drawW = 95 * scale;
-      const drawH = 95 * scale;
-      c.drawImage(sprite, -drawW / 2, -drawH / 2, drawW, drawH);
-      c.restore();
-    }
-
-    // Name Tag in Japanese
-    if (isPlayer) {
-      c.fillStyle = '#38bdf8';
-      c.font = `bold ${Math.max(9, Math.floor(10 * scale))}px "M PLUS Rounded 1c", Orbitron, sans-serif`;
-      c.textAlign = 'center';
-      c.fillText('▲ あなた', 0, -48 * scale);
-    } else {
-      c.fillStyle = 'rgba(255, 255, 255, 0.85)';
-      c.font = `bold ${Math.max(8, Math.floor(9 * scale))}px "M PLUS Rounded 1c", Orbitron, sans-serif`;
-      c.textAlign = 'center';
-      c.fillText(racer.name, 0, -46 * scale);
-    }
-
-    // CP Status Bubble (Suppressed during active number calculation)
-    if (!isFlashingNumbers && racer.statusTimer > 0 && racer.statusText) {
-      const isMiss = racer.statusText.includes('ミス');
-      c.fillStyle = isMiss ? '#ef4444' : (racer.statusText.includes('ブースト') ? '#38bdf8' : '#facc15');
-      c.font = `bold ${Math.max(10, Math.floor(11 * scale))}px "M PLUS Rounded 1c", sans-serif`;
-      c.textAlign = 'center';
-      c.shadowColor = c.fillStyle;
-      c.shadowBlur = 10;
-      c.fillText(racer.statusText, 0, -60 * scale);
-      c.shadowBlur = 0;
-    }
-
-    c.restore();
-  }
-
-  function spawnSparks(racer) {
-    if (isFlashingNumbers) return;
-    const distDiff = racer.dist - racers[0].dist;
-    let t = 0.70 - (distDiff * 0.0055);
-    t = Math.max(0.12, Math.min(0.92, t));
-    const rw = (canvas.width * 0.38) + ((canvas.width * 0.92) - (canvas.width * 0.38)) * Math.pow(t, 1.35);
-    const curveOff = (1 - t) * (1 - t) * currentCurve;
-    const cx = canvas.width / 2 + curveOff;
-    const cy = 16 + (canvas.height - 16) * t;
-    const carX = cx + (racer.lateralPos * (rw * 0.46));
-
-    for (let i = 0; i < 16; i++) {
-      particles.push({
-        x: carX + (Math.random() - 0.5) * 20,
-        y: cy + 10 + Math.random() * 15,
-        vx: (Math.random() - 0.5) * 7,
-        vy: Math.random() * 5 + 2,
-        life: 25,
-        size: Math.random() * 2.5 + 2,
-        color: Math.random() > 0.5 ? '#ef4444' : '#f97316'
-      });
-    }
-  }
-
-  function spawnContactSparks(normLat, trackDist) {
-    if (isFlashingNumbers) return;
-    const distDiff = trackDist - racers[0].dist;
-    let t = 0.70 - (distDiff * 0.0055);
-    t = Math.max(0.12, Math.min(0.92, t));
-    const rw = (canvas.width * 0.38) + ((canvas.width * 0.92) - (canvas.width * 0.38)) * Math.pow(t, 1.35);
-    const curveOff = (1 - t) * (1 - t) * currentCurve;
-    const cx = canvas.width / 2 + curveOff;
-    const cy = 16 + (canvas.height - 16) * t;
-    const contactX = cx + (normLat * (rw * 0.46));
-
-    for (let i = 0; i < 10; i++) {
-      particles.push({
-        x: contactX + (Math.random() - 0.5) * 14,
-        y: cy + (Math.random() - 0.5) * 14,
-        vx: (Math.random() - 0.5) * 8,
-        vy: (Math.random() - 0.5) * 8 + 2,
-        life: 18,
-        size: Math.random() * 2.5 + 1.5,
-        color: Math.random() > 0.35 ? '#fef08a' : '#f97316'
-      });
-    }
-  }
-
-  function drawParticles(c) {
-    particles.forEach(p => {
-      p.x += p.vx;
-      p.y += p.vy;
-      p.life--;
-      c.fillStyle = p.color;
-      c.fillRect(p.x, p.y, p.size || 3, p.size || 3);
-    });
-    particles = particles.filter(p => p.life > 0);
-  }
-
-  // ==================== STAGE MORPHING / TRANSITION ====================
-  function updateStageZone() {
-    let nextStage = 0;
-    if (currentProblem >= 4) nextStage = 1;
-    if (currentProblem >= 8) nextStage = 2;
-
-    if (nextStage !== currentStageIndex) {
-      currentStageIndex = nextStage;
-      const st = STAGES[currentStageIndex];
-      if (zoneBadge) zoneBadge.textContent = `ステージ ${st.id}`;
-      screenFlash('rgba(255, 255, 255, 0.7)');
-      playNitroSound();
-
-      feedbackEl.innerHTML = `<div class="warp-banner italic text-yellow-300">ステージ ${st.id} へ突入！<br><span class="text-xs text-white">${st.name}</span></div>`;
-      setTimeout(() => { if (feedbackEl.textContent.includes('ステージ')) feedbackEl.innerHTML = ''; }, 1200);
-      return true;
-    }
-    return false;
-  }
-
-  // ==================== GARAGE & INVENTORY ====================
-  function updateInventoryUI() {
-    if (playerPointsEl) playerPointsEl.textContent = `${playerPoints.toLocaleString()} PTS`;
-    if (playerCoresEl) playerCoresEl.textContent = `${playerCores} コア`;
-    const gPts = document.getElementById('garagePts');
-    if (gPts) gPts.textContent = playerPoints.toLocaleString();
-    const gCores = document.getElementById('garageCores');
-    if (gCores) gCores.textContent = playerCores;
-    const cNitro = document.getElementById('countNitro');
-    if (cNitro) cNitro.textContent = itemsInventory.nitro;
-    const cWarp = document.getElementById('countWarp');
-    if (cWarp) cWarp.textContent = itemsInventory.warp;
-    const cShield = document.getElementById('countShield');
-    if (cShield) cShield.textContent = itemsInventory.shield;
+    document.getElementById('title-screen').classList.add('hidden');
+    document.getElementById('hud').classList.remove('hidden');
     
-    const readyItems = itemsInventory.nitro + itemsInventory.warp + itemsInventory.shield;
-    const lItemCount = document.getElementById('lobbyItemCount');
-    if (lItemCount) lItemCount.textContent = `${readyItems}個 つかえる`;
+    updateHUD();
+    startWave();
+}
 
-    const igNitro = document.getElementById('inGameNitroBtn');
-    if (igNitro) igNitro.style.opacity = itemsInventory.nitro > 0 ? '1' : '0.4';
-    const igWarp = document.getElementById('inGameWarpBtn');
-    if (igWarp) igWarp.style.opacity = itemsInventory.warp > 0 ? '1' : '0.4';
-    const igShield = document.getElementById('inGameShieldBtn');
-    if (igShield) igShield.style.opacity = itemsInventory.shield > 0 ? '1' : '0.4';
-  }
-  updateInventoryUI();
-
-  window.openGarage = () => { garageModal.classList.remove('hidden-force'); renderMachinesList(); };
-  window.closeGarage = () => { garageModal.classList.add('hidden-force'); updateInventoryUI(); };
-  
-  window.switchGarageTab = (tab) => {
-    ['machines', 'shop', 'gacha'].forEach(t => {
-      document.getElementById(`tab${t.charAt(0).toUpperCase() + t.slice(1)}`).classList.add('hidden-force');
-      document.getElementById(`tab${t.charAt(0).toUpperCase() + t.slice(1)}Btn`).className = 'flex-1 py-2 rounded-xl text-xs font-black bg-slate-800 text-slate-300 border border-slate-700';
-    });
-    document.getElementById(`tab${tab.charAt(0).toUpperCase() + tab.slice(1)}`).classList.remove('hidden-force');
-    document.getElementById(`tab${tab.charAt(0).toUpperCase() + tab.slice(1)}Btn`).className = 'flex-1 py-2 rounded-xl text-xs font-black bg-cyan-600 text-white border border-cyan-400';
-  };
-
-  function renderMachinesList() {
-    const list = document.getElementById('machineCardsList');
-    if (!list) return;
-    list.innerHTML = '';
-    MACHINES.forEach(m => {
-      const isEquipped = currentMachine.id === m.id;
-      const card = document.createElement('div');
-      card.className = `glass-panel p-3.5 rounded-2xl border ${isEquipped ? 'border-cyan-400 shadow-[0_0_20px_rgba(6,182,212,0.5)]' : 'border-slate-700'} flex justify-between items-center`;
-      card.innerHTML = `
-        <div>
-          <div class="flex items-center gap-2">
-            <span class="text-sm font-black text-white">${m.name}</span>
-            <span class="text-[9px] px-2 py-0.5 rounded font-black ${m.rarity==='SSR' ? 'bg-yellow-500 text-black':'bg-cyan-950 text-cyan-300 border border-cyan-500'}">${m.rarity}</span>
-          </div>
-          <div class="text-[10px] text-slate-300 mt-1">${m.desc}</div>
-        </div>
-        <div>
-          ${m.unlocked 
-            ? `<button onclick="equipMachine('${m.id}')" class="px-3.5 py-1.5 rounded-xl text-xs font-black ${isEquipped ? 'bg-cyan-500 text-white' : 'bg-slate-700 text-slate-200'}">${isEquipped ? 'えらび中' : 'つかう'}</button>`
-            : `<span class="text-[10px] text-slate-400 font-bold">🔒 ガチャ限定</span>`}
-        </div>
-      `;
-      list.appendChild(card);
-    });
-  }
-
-  window.equipMachine = (id) => {
-    currentMachine = MACHINES.find(m => m.id === id);
-    document.getElementById('lobbyMachineName').textContent = currentMachine.name;
-    racers[0].spriteKey = currentMachine.spriteKey;
-    racers[0].flameColor = currentMachine.color;
-    renderMachinesList();
-  };
-
-  window.buyItem = (itemKey, cost) => {
-    if (playerPoints >= cost) {
-      playerPoints -= cost;
-      itemsInventory[itemKey]++;
-      updateInventoryUI();
-      playTap();
-    } else {
-      alert("ポイントが足りません！レースで1位になってポイントをゲットしよう！");
-    }
-  };
-
-  window.spinGacha = () => {
-    if (playerCores < 100) {
-      alert("エナジーコアが足りません！（100個ひつよう）\nレースで上位に入るともらえます！");
-      return;
-    }
-    playerCores -= 100;
-    updateInventoryUI();
-    screenFlash('rgba(236,72,153,0.9)');
-    playNitroSound();
-
-    const locked = MACHINES.filter(m => !m.unlocked);
-    let wonItem = null;
-    if (locked.length > 0) {
-      wonItem = locked[Math.floor(Math.random() * locked.length)];
-      wonItem.unlocked = true;
-    } else {
-      playerPoints += 1000;
-      wonItem = { name: "1,000 ポイント (かぶりボーナス)" };
-    }
-    const resultBox = document.getElementById('gachaResult');
-    document.getElementById('gachaItemTitle').textContent = wonItem.name;
-    resultBox.classList.remove('hidden-force');
-    renderMachinesList();
-  };
-
-  window.useItem = (type) => {
-    if (itemsInventory[type] <= 0) return;
-    itemsInventory[type]--;
-    updateInventoryUI();
-    playKick();
+function generateProblem() {
+    currentProblem = [];
+    correctAnswer = 0;
+    const min = Math.pow(10, config.digits - 1);
+    const max = Math.pow(10, config.digits) - 1;
     
-    if (type === 'nitro') {
-      activeNitroUsed = true;
-      feedbackEl.innerHTML = '<div class="nitro-text italic">⚡ ロケットブースト じゅんびOK!</div>';
-    } else if (type === 'warp') {
-      activeWarpUsed = true;
-      feedbackEl.innerHTML = '<div class="impact-text italic">⏱️ タイムワープ（スロー）発動！</div>';
-    } else if (type === 'shield') {
-      activeShield++;
-      shieldIndicator.classList.remove('hidden-force');
-      shieldIndicator.textContent = `🛡️ バリア作動中 (${activeShield})`;
+    for (let i = 0; i < config.count; i++) {
+        // Simple random number generation for prototype
+        let num = Math.floor(Math.random() * (max - min + 1)) + min;
+        currentProblem.push(num);
+        correctAnswer += num;
     }
-    setTimeout(() => { if (feedbackEl.textContent.includes('じゅんび') || feedbackEl.textContent.includes('ワープ')) feedbackEl.innerHTML = ''; }, 800);
-  };
+}
 
-  // ==================== ASSOCIATION & LEVEL CONTROLLER ====================
-  function updateRuleDisplay() {
-    const assoc = ASSOCIATIONS[currentAssocKey];
-    diffDisplay.textContent = activeRule.name;
-    ingameLevel.textContent = activeRule.name;
-    const tagEl = document.getElementById('ingameAssocTag');
-    if (tagEl) tagEl.textContent = assoc.shortName;
-    document.getElementById('ruleDigits').textContent = `${activeRule.digits}桁`;
-    document.getElementById('ruleKuchi').textContent = `${activeRule.kuchi}口`;
-    document.getElementById('ruleTime').textContent = `${(activeRule.time / 1000).toFixed(1)}秒`;
+function spawnEnemyWave() {
+    // Number of enemies scales with wave and difficulty
+    const enemyCount = 20 + (wave * 15 * config.digits);
+    for (let i = 0; i < enemyCount; i++) {
+        // Spawn slightly above screen
+        let x = Math.random() * cw;
+        let y = -50 - Math.random() * 200;
+        enemies.push(new Unit(x, y, '#ef4444', true));
+    }
+}
+
+function startWave() {
+    generateProblem();
+    spawnEnemyWave();
     
-    const perNum = (activeRule.time / activeRule.kuchi / 1000).toFixed(2);
-    document.getElementById('ruleSpeed').textContent = `${perNum}秒 / 口`;
-  }
-
-  window.selectAssociation = (assocKey) => {
-    if (!ASSOCIATIONS[assocKey]) return;
-    currentAssocKey = assocKey;
-    const assoc = ASSOCIATIONS[currentAssocKey];
-
-    ['flash_assoc', 'zenjuren', 'nichijuren'].forEach(k => {
-      const btn = document.getElementById(k === 'flash_assoc' ? 'assocBtn_flash' : (k === 'zenjuren' ? 'assocBtn_zenju' : 'assocBtn_nichiju'));
-      if (btn) {
-        if (k === currentAssocKey) {
-          btn.className = 'py-1 px-1 rounded-lg text-[10px] sm:text-[11px] font-black tracking-tighter transition-all bg-pink-600 text-white shadow-[0_0_12px_rgba(236,72,153,0.6)]';
-        } else {
-          btn.className = 'py-1 px-1 rounded-lg text-[10px] sm:text-[11px] font-black tracking-tighter transition-all text-slate-400 hover:text-white';
-        }
-      }
-    });
-
-    document.getElementById('assocFullName').textContent = assoc.name;
-    document.getElementById('assocBadge').textContent = assoc.tag;
-    const modalTitle = document.getElementById('modalAssocTitle');
-    if (modalTitle) modalTitle.textContent = assoc.name;
-
-    diffSlider.min = 0;
-    diffSlider.max = assoc.rules.length - 1;
-    document.getElementById('sliderMinLabel').textContent = `${assoc.rules[0].name} (かんたん)`;
-    document.getElementById('sliderMaxLabel').textContent = `${assoc.rules[assoc.rules.length - 1].name} (たつじん)`;
-
-    let matchedIdx = assoc.rules.findIndex(r => r.name === activeRule.name);
-    if (matchedIdx === -1) matchedIdx = Math.min(6, assoc.rules.length - 1);
-    diffSlider.value = matchedIdx;
-    activeRule = assoc.rules[matchedIdx];
-
-    updateRuleDisplay();
-    playTap();
-  };
-
-  diffSlider.oninput = () => {
-    const val = parseInt(diffSlider.value, 10);
-    const rules = ASSOCIATIONS[currentAssocKey].rules;
-    activeRule = rules[Math.max(0, Math.min(rules.length - 1, val))];
-    updateRuleDisplay();
-  };
-  diffSlider.oninput();
-
-  // Level Selection Modal
-  let currentModalFilter = 'all';
-  window.openLevelModal = () => {
-    document.getElementById('levelSelectModal').classList.remove('hidden-force');
-    renderLevelCards();
-  };
-
-  window.closeLevelModal = () => {
-    document.getElementById('levelSelectModal').classList.add('hidden-force');
-  };
-
-  window.filterLevelModal = (filterType) => {
-    currentModalFilter = filterType;
-    ['all', 'kyu', 'dan'].forEach(f => {
-      const btn = document.getElementById(`levelTab${f.charAt(0).toUpperCase() + f.slice(1)}`);
-      if (btn) {
-        if (f === filterType) {
-          btn.className = 'flex-1 py-1.5 rounded-xl text-xs font-black bg-pink-600 text-white border border-pink-400';
-        } else {
-          btn.className = 'flex-1 py-1.5 rounded-xl text-xs font-black bg-slate-800 text-slate-300 border border-slate-700';
-        }
-      }
-    });
-    renderLevelCards();
-  };
-
-  function renderLevelCards() {
-    const grid = document.getElementById('levelCardsGrid');
-    if (!grid) return;
-    grid.innerHTML = '';
-    const rules = ASSOCIATIONS[currentAssocKey].rules;
-
-    rules.forEach((r, idx) => {
-      const isDan = r.name.includes('段');
-      if (currentModalFilter === 'kyu' && isDan) return;
-      if (currentModalFilter === 'dan' && !isDan) return;
-
-      const isCurrent = activeRule.name === r.name;
-      const card = document.createElement('button');
-      card.onclick = () => { selectLevelIndex(idx); closeLevelModal(); };
-      card.className = `glass-panel p-2.5 rounded-xl border text-left transition-all active:scale-95 ${
-        isCurrent ? 'border-pink-500 bg-pink-950/60 shadow-[0_0_15px_rgba(236,72,153,0.5)]' : 'border-slate-700/80 hover:border-cyan-500/60 bg-slate-900/80'
-      }`;
-
-      const perSec = (r.time / r.kuchi / 1000).toFixed(2);
-      card.innerHTML = `
-        <div class="flex justify-between items-center mb-1">
-          <span class="text-sm font-black ${isDan ? 'text-yellow-400' : 'text-white'}">${r.name}</span>
-          <span class="text-[9px] px-1.5 py-0.5 rounded font-bold ${isDan ? 'bg-yellow-950 text-yellow-300 border border-yellow-600' : 'bg-slate-800 text-cyan-300 border border-slate-600'}">
-            ${isDan ? '段位' : '級位'}
-          </span>
-        </div>
-        <div class="text-[10px] text-slate-300 font-bold flex justify-between">
-          <span>${r.digits}桁 / ${r.kuchi}口</span>
-          <span class="text-cyan-300">${(r.time / 1000).toFixed(1)}秒</span>
-        </div>
-        <div class="text-[9px] text-slate-400 mt-1">1口: ${perSec}秒</div>
-      `;
-      grid.appendChild(card);
-    });
-  }
-
-  window.selectLevelIndex = (idx) => {
-    const rules = ASSOCIATIONS[currentAssocKey].rules;
-    activeRule = rules[idx];
-    diffSlider.value = idx;
-    updateRuleDisplay();
-    playTap();
-  };
-
-  autoPlayToggle.addEventListener('change', (e) => { isAutoPlay = e.target.checked; });
-
-  // ==================== START GAME (GRAND PRIX VS EXAM) ====================
-  window.startGame = () => {
-    initAudio();
-    lobbyScreen.classList.add('hidden-force');
-    gameScreen.classList.remove('hidden-force');
-
-    const assoc = ASSOCIATIONS[currentAssocKey];
-    const tagEl = document.getElementById('ingameAssocTag');
-    if (tagEl) tagEl.textContent = assoc.shortName;
-    ingameLevel.textContent = activeRule.name;
-    
-    if (isAutoPlay) autoPlayIndicator.classList.remove('hidden-force');
-    else autoPlayIndicator.classList.add('hidden-force');
-
-    isPlaying = true;
-    isGoal = false;
-    isFlashingNumbers = false;
-    currentProblem = 1;
-    combo = 0;
-    answerTimes = [];
-    nitroTriggers = 0;
-    totalAnswers = 0;
-    correctAnswers = 0;
-    maxCombo = 0;
-
-    activeShield = currentMachine.shieldInit || 0;
-    if (activeShield > 0) {
-      shieldIndicator.classList.remove('hidden-force');
-      shieldIndicator.textContent = `🛡️ バリア作動中 (${activeShield})`;
-    } else {
-      shieldIndicator.classList.add('hidden-force');
-    }
-
-    // MODE SELECTION BRANCH
-    if (selectedGameMode === 'grandprix') {
-      // 1. GRAND PRIX MODE: Show Racing Track with 3D Question Items
-      hudModeBadge.textContent = '🏎️ レース';
-      hudModeBadge.className = 'glass-panel px-2 py-0.5 rounded-full border-pink-500 text-pink-300 font-black text-[9px]';
-      gpProgressBadge.classList.remove('hidden-force');
-      livePositionBadge.classList.remove('hidden-force');
-      zoneBadge.classList.remove('hidden-force');
-      inGameItemBar.classList.remove('hidden-force');
-      examProgressBadge.classList.add('hidden-force');
-
-      trackContainer.classList.remove('hidden-force');
-      examContainer.classList.add('hidden-force');
-      grandPrixEquationArea.classList.remove('hidden-force');
-      inputArea.classList.add('hidden-force');
-
-      speed = 120;
-      targetSpeed = 120;
-      trackDistance = 0;
-      currentStageIndex = 0;
-      currentLap = 1;
-      progressText.textContent = `1 / ${totalLaps} 周`;
-      zoneBadge.textContent = "ステージ 1";
-
-      initDashPlates();
-      initQuestionItems();
-      initOverheadGates();
-
-      // Reset Racers
-      racers[0].dist = 0; racers[0].speed = 120; racers[0].boostVel = 0; racers[0].lateralPos = 0; racers[0].targetLateral = 0; racers[0].lateralVel = 0;
-      racers[1].dist = 42; racers[1].speed = 105; racers[1].boostVel = 0; racers[1].lateralPos = 0.50; racers[1].targetLateral = 0.50; racers[1].lateralVel = 0;
-      racers[2].dist = 28; racers[2].speed = 96; racers[2].boostVel = 0; racers[2].lateralPos = -0.50; racers[2].targetLateral = -0.50; racers[2].lateralVel = 0;
-      racers[3].dist = 14; racers[3].speed = 88; racers[3].boostVel = 0; racers[3].lateralPos = 0.20; racers[3].targetLateral = 0.20; racers[3].lateralVel = 0;
-      racers[0].spriteKey = currentMachine.spriteKey;
-      racers[0].flameColor = currentMachine.color;
-
-      resizeCanvas();
-      setupSteerControls();
-      requestAnimationFrame(drawCurvedTrack);
-
-      // Notification banner
-      feedbackEl.innerHTML = '<div class="warp-banner italic text-cyan-300">🏎️ コースの❓キューブを取って暗算しよう！</div>';
-      setTimeout(() => { if (feedbackEl.textContent.includes('キューブ')) feedbackEl.innerHTML = ''; }, 1600);
-
-    } else {
-      // 2. CERTIFICATION EXAM MODE: Pure Concentration, No Track
-      hudModeBadge.textContent = '📝 けんてい';
-      hudModeBadge.className = 'glass-panel px-2 py-0.5 rounded-full border-cyan-400 text-cyan-300 font-black text-[9px]';
-      gpProgressBadge.classList.add('hidden-force');
-      livePositionBadge.classList.add('hidden-force');
-      zoneBadge.classList.add('hidden-force');
-      inGameItemBar.classList.add('hidden-force');
-      examProgressBadge.classList.remove('hidden-force');
-
-      trackContainer.classList.add('hidden-force');
-      grandPrixEquationArea.classList.add('hidden-force');
-      inputArea.classList.add('hidden-force');
-      examContainer.classList.remove('hidden-force');
-
-      currentExamQuestion = 1;
-      examResults = [];
-      document.getElementById('examAssocHeaderTitle').textContent = assoc.name;
-      renderExamPills();
-      startExamQuestion();
-    }
-  };
-
-  // ==================== GRAND PRIX QUESTION LOGIC ====================
-  function triggerGrandPrixQuestion() {
-    if (isQuestionActive || !isPlaying) return;
-    isQuestionActive = true;
-    
-    // Show Alert Banner
-    if (itemNoticeBanner) {
-      itemNoticeBanner.classList.remove('hidden-force');
-      setTimeout(() => itemNoticeBanner.classList.add('hidden-force'), 1200);
-    }
-
-    numbers = [];
-    expectedSum = 0;
-    const { digits, kuchi } = activeRule;
-    for (let i = 0; i < kuchi; i++) {
-      let max = Math.pow(10, digits) - 1;
-      let min = digits > 1 ? Math.pow(10, digits - 1) : 1;
-      let n = Math.floor(Math.random() * (max - min + 1)) + min;
-      numbers.push(n);
-      expectedSum += n;
-    }
-
+    state = 'PLAYING_FLASH';
     flashIndex = 0;
-    equationEl.innerHTML = '';
-    isFlashingNumbers = true;
-    setTimeout(() => flashNumberGrandPrix(), 400);
-  }
+    lastFlashTime = performance.now() + 1000; // 1 sec delay before flashing starts
+    
+    document.getElementById('flash-display').classList.remove('hidden');
+    document.getElementById('flash-display').textContent = 'READY?';
+    document.getElementById('numpad-section').classList.add('hidden');
+}
 
-  function flashNumberGrandPrix() {
-    if (!isPlaying) { isFlashingNumbers = false; isQuestionActive = false; return; }
-    let speedMs = activeRule.time / activeRule.kuchi;
-    if (activeWarpUsed) { speedMs *= 1.5; activeWarpUsed = false; }
+function createExplosion(x, y) {
+    for(let i=0; i<5; i++) {
+        particles.push(new Particle(x, y, '#fbbf24'));
+    }
+}
 
-    if (flashIndex < numbers.length) {
-      isFlashingNumbers = true;
-      equationEl.innerHTML = `<span class="flash-num italic">${numbers[flashIndex]}</span>`;
-      setTimeout(() => {
-        if (!isPlaying) { isFlashingNumbers = false; isQuestionActive = false; return; }
-        equationEl.innerHTML = '';
-        flashIndex++;
-        setTimeout(() => flashNumberGrandPrix(), speedMs * 0.25);
-      }, speedMs * 0.75);
+// --- Input Handling ---
+function inputNum(n) {
+    if (state !== 'PLAYING_INPUT') return;
+    if (currentInput.length < 6) {
+        currentInput += n;
+        updateInputDisplay();
+    }
+}
+
+function deleteNum() {
+    if (state !== 'PLAYING_INPUT') return;
+    currentInput = currentInput.slice(0, -1);
+    updateInputDisplay();
+}
+
+function updateInputDisplay() {
+    document.getElementById('player-input-display').textContent = currentInput || '_';
+}
+
+function submitAnswer() {
+    if (state !== 'PLAYING_INPUT') return;
+    if (currentInput === "") return;
+    
+    const answered = parseInt(currentInput);
+    
+    // Determine how many allies to spawn
+    let spawnCount = 0;
+    if (answered === correctAnswer) {
+        // Correct! Spawn massive army (exact answer, or at least a big minimum)
+        spawnCount = Math.max(correctAnswer, 50 + wave * 20); 
+        spawnAllies(spawnCount);
+        showFeedback("CORRECT!", '#34d399');
     } else {
-      isFlashingNumbers = false;
-      equationEl.innerHTML = '';
-      playerInput = "";
-      answerDisplay.textContent = "";
-      inputArea.classList.remove('hidden-force');
-      inputStartTime = Date.now();
-      startNitroTimer();
-
-      if (isAutoPlay) {
-        setTimeout(() => { if (!isPlaying) return; simulateTyping(expectedSum.toString()); }, 90);
-      }
+        // Wrong! Spawn tiny penalty army
+        spawnCount = 5; 
+        spawnAllies(spawnCount);
+        showFeedback("MISS...", '#fb7185');
     }
-  }
+    
+    // Proceed to battle phase
+    state = 'PLAYING_BATTLE';
+    document.getElementById('numpad-section').classList.add('hidden');
+}
 
-  // ==================== CERTIFICATION EXAM MODE LOGIC ====================
-  function renderExamPills() {
-    examPillsGrid.innerHTML = '';
-    for (let i = 1; i <= examTotalQuestions; i++) {
-      const pill = document.createElement('div');
-      pill.id = `examPill_${i}`;
-      let statusClass = 'bg-slate-800 text-slate-400 border border-slate-700';
-      let icon = i;
-      if (i < currentExamQuestion) {
-        if (examResults[i - 1] === true) {
-          statusClass = 'bg-emerald-600 text-white border border-emerald-400';
-          icon = '✓';
-        } else {
-          statusClass = 'bg-red-600 text-white border border-red-400';
-          icon = '✕';
-        }
-      } else if (i === currentExamQuestion) {
-        statusClass = 'bg-cyan-500 text-black font-black border border-white animate-pulse shadow-[0_0_10px_#22d3ee]';
-      }
-      pill.className = `py-1 text-[10px] rounded-lg font-bold flex items-center justify-center ${statusClass}`;
-      pill.textContent = icon;
-      examPillsGrid.appendChild(pill);
+function spawnAllies(count) {
+    // Spawn allies from bottom center
+    for (let i = 0; i < count; i++) {
+        let x = cw / 2 + (Math.random() - 0.5) * (cw * 0.8);
+        let y = ch + 20 + Math.random() * 100;
+        allies.push(new Unit(x, y, '#3b82f6', false));
     }
-    examScoreLive.textContent = `せいかい: ${correctAnswers} / 10問`;
-    examQNum.textContent = currentExamQuestion;
-  }
+}
 
-  function startExamQuestion() {
-    if (!isPlaying || selectedGameMode !== 'exam') return;
-    renderExamPills();
-    examEquation.innerHTML = '';
-    examFeedbackText.innerHTML = '';
-    examAnswerDisplay.textContent = '';
-    playerInput = '';
-    document.getElementById('examInputArea').classList.add('hidden-force');
-
-    // Countdown 3, 2, 1
-    examCountdownText.classList.remove('hidden-force');
-    examCountdownText.textContent = "3";
-    playTap();
-
+function showFeedback(text, color) {
+    const flashEl = document.getElementById('flash-display');
+    flashEl.classList.remove('hidden');
+    flashEl.style.color = color;
+    flashEl.textContent = text;
+    
     setTimeout(() => {
-      if (!isPlaying) return;
-      examCountdownText.textContent = "2";
-      playTap();
-      setTimeout(() => {
-        if (!isPlaying) return;
-        examCountdownText.textContent = "1";
-        playTap();
-        setTimeout(() => {
-          if (!isPlaying) return;
-          examCountdownText.textContent = "スタート！";
-          playKick();
-          setTimeout(() => {
-            if (!isPlaying) return;
-            examCountdownText.classList.add('hidden-force');
-            generateAndFlashExamNumbers();
-          }, 350);
-        }, 450);
-      }, 450);
-    }, 450);
-  }
+        flashEl.classList.add('hidden');
+        flashEl.style.color = 'white';
+    }, 1500);
+}
 
-  function generateAndFlashExamNumbers() {
-    numbers = [];
-    expectedSum = 0;
-    const { digits, kuchi } = activeRule;
-    for (let i = 0; i < kuchi; i++) {
-      let max = Math.pow(10, digits) - 1;
-      let min = digits > 1 ? Math.pow(10, digits - 1) : 1;
-      let n = Math.floor(Math.random() * (max - min + 1)) + min;
-      numbers.push(n);
-      expectedSum += n;
-    }
+function updateHUD() {
+    document.getElementById('hud-wave').textContent = wave;
+    document.getElementById('hud-hp').textContent = hp;
+}
 
-    flashIndex = 0;
-    isFlashingNumbers = true;
-    flashNumberExam();
-  }
+function gameOver() {
+    state = 'GAMEOVER';
+    document.getElementById('result-screen').classList.remove('hidden');
+    document.getElementById('hud').classList.add('hidden');
+    document.getElementById('result-wave').textContent = wave;
+    document.getElementById('result-title').textContent = hp <= 0 ? "GAME OVER" : "CLEARED!";
+    document.getElementById('result-title').style.color = hp <= 0 ? "#ef4444" : "#3b82f6";
+}
 
-  function flashNumberExam() {
-    if (!isPlaying) { isFlashingNumbers = false; return; }
-    let speedMs = activeRule.time / activeRule.kuchi;
-
-    if (flashIndex < numbers.length) {
-      isFlashingNumbers = true;
-      examEquation.innerHTML = `<span class="flash-num italic">${numbers[flashIndex]}</span>`;
-      setTimeout(() => {
-        if (!isPlaying) { isFlashingNumbers = false; return; }
-        examEquation.innerHTML = '';
-        flashIndex++;
-        setTimeout(() => flashNumberExam(), speedMs * 0.25);
-      }, speedMs * 0.75);
-    } else {
-      isFlashingNumbers = false;
-      examEquation.innerHTML = '';
-      playerInput = "";
-      examAnswerDisplay.textContent = "";
-      document.getElementById('examInputArea').classList.remove('hidden-force');
-      inputStartTime = Date.now();
-
-      if (isAutoPlay) {
-        setTimeout(() => { if (!isPlaying) return; simulateTyping(expectedSum.toString()); }, 90);
-      }
-    }
-  }
-
-  // ==================== NUMPAD & SUBMIT ANSWER ====================
-  window.addNum = (n, btnEl) => {
-    playTap();
-    if (playerInput.length < 8) {
-      playerInput += n;
-      if (selectedGameMode === 'grandprix') {
-        answerDisplay.textContent = playerInput;
-      } else {
-        examAnswerDisplay.textContent = playerInput;
-      }
-    }
-  };
-
-  window.delNum = () => {
-    playTap();
-    playerInput = playerInput.slice(0, -1);
-    if (selectedGameMode === 'grandprix') {
-      answerDisplay.textContent = playerInput;
-    } else {
-      examAnswerDisplay.textContent = playerInput;
-    }
-  };
-
-  function simulateTyping(str, idx = 0) {
-    if (!isPlaying || !isAutoPlay) return;
-    if (idx < str.length) {
-      addNum(str[idx], null);
-      setTimeout(() => simulateTyping(str, idx + 1), 55);
-    } else {
-      setTimeout(() => { submitAnswer(); }, 75);
-    }
-  }
-
-  function startNitroTimer() {
-    clearInterval(nitroTimerInterval);
-    if (!nitroTimerBar) return;
-    nitroTimerBar.style.width = '100%';
-    nitroTimerInterval = setInterval(() => {
-      const elapsed = Date.now() - inputStartTime;
-      const remainingRatio = Math.max(0, 1 - (elapsed / 1500));
-      nitroTimerBar.style.width = `${remainingRatio * 100}%`;
-      if (remainingRatio <= 0) clearInterval(nitroTimerInterval);
-    }, 40);
-  }
-
-  window.submitAnswer = () => {
-    if (!playerInput) return;
-    clearInterval(nitroTimerInterval);
-    totalAnswers++;
-    const ans = parseInt(playerInput, 10);
-    const timeTaken = Date.now() - inputStartTime;
-    answerTimes.push(timeTaken);
-
-    if (selectedGameMode === 'grandprix') {
-      // GRAND PRIX ANSWER HANDLING
-      inputArea.classList.add('hidden-force');
-      isQuestionActive = false;
-
-      if (ans === expectedSum) {
-        correctAnswers++; combo++;
-        if (combo > maxCombo) maxCombo = combo;
-
-        const isQuickNitro = (timeTaken <= 1500) || activeNitroUsed;
-        activeNitroUsed = false;
-
-        if (isQuickNitro) {
-          nitroTriggers++;
-          playNitroSound();
-          targetSpeed = Math.min(speed + (750 * currentMachine.nitroBonus), currentMachine.topSpeed);
-          racers[0].boostVel = 800 * currentMachine.nitroBonus;
-          feedbackEl.innerHTML = `<div class="nitro-text italic text-cyan-300">⚡ ロケットブースト！ ごぼう抜き！！</div>`;
-        } else {
-          playCorrect(combo);
-          targetSpeed = Math.min(speed + (400 * currentMachine.accel), currentMachine.topSpeed);
-          racers[0].boostVel = 450 * currentMachine.accel;
-          feedbackEl.innerHTML = `<div class="impact-text italic">せいかい！ 加速！</div>`;
-        }
-        screenFlash(isQuickNitro ? 'rgba(56,189,248,0.7)' : 'rgba(255,255,255,0.7)');
-        setTimeout(() => { if (feedbackEl.textContent.includes('せいかい') || feedbackEl.textContent.includes('ブースト')) feedbackEl.innerHTML = ''; }, 1200);
-
-      } else {
-        // Grand Prix Miss
-        if (activeShield > 0) {
-          activeShield--;
-          if (activeShield === 0) shieldIndicator.classList.add('hidden-force');
-          else shieldIndicator.textContent = `🛡️ バリア作動中 (${activeShield})`;
-          playKick();
-          feedbackEl.innerHTML = `<div class="impact-text italic text-emerald-400">🛡️ バリアでスピードを守った！</div>`;
-        } else {
-          playWrong(); combo = 0;
-          screenFlash('rgba(239, 68, 68, 0.7)');
-          feedbackEl.innerHTML = `<div class="text-2xl font-black text-red-500 drop-shadow-[0_0_20px_#ef4444] mt-1">まちがい！<br><span class="text-sm text-white">こたえ: ${expectedSum}</span></div>`;
-          targetSpeed = Math.max(speed - 300, 100);
-          racers[0].boostVel = -280;
-          spawnSparks(racers[0]);
-        }
-        setTimeout(() => { if (feedbackEl.textContent.includes('まちがい') || feedbackEl.textContent.includes('バリア')) feedbackEl.innerHTML = ''; }, 1400);
-      }
-
-    } else {
-      // EXAM MODE ANSWER HANDLING
-      document.getElementById('examInputArea').classList.add('hidden-force');
-      const isCorrect = (ans === expectedSum);
-
-      if (isCorrect) {
-        correctAnswers++;
-        examResults.push(true);
-        playCorrect(1);
-        examFeedbackText.innerHTML = '<span class="text-emerald-400 text-3xl font-black drop-shadow-[0_0_15px_#10b981]">⭕ せいかい！</span>';
-      } else {
-        examResults.push(false);
-        playWrong();
-        examFeedbackText.innerHTML = `<span class="text-red-400 text-2xl font-black drop-shadow-[0_0_15px_#ef4444]">❌ まちがい (正解: ${expectedSum})</span>`;
-      }
-      renderExamPills();
-
-      setTimeout(() => {
-        if (!isPlaying) return;
-        if (currentExamQuestion < examTotalQuestions) {
-          currentExamQuestion++;
-          startExamQuestion();
-        } else {
-          // Exam Completed!
-          endRace(true);
-        }
-      }, 900);
-    }
-  };
-
-  // ==================== END RACE / FINISH RESULTS ====================
-  window.endRace = (isClear) => {
-    isPlaying = false;
-    isFlashingNumbers = false;
-    isQuestionActive = false;
-    gameScreen.classList.add('hidden-force');
-    inputArea.classList.add('hidden-force');
-    if (equationEl) equationEl.innerHTML = '';
-    if (feedbackEl) feedbackEl.innerHTML = '';
+// --- Main Loop ---
+function update(dt, time) {
+    // Background Grid scroll effect (subtle)
     
-    if (isClear) {
-      victoryScreen.classList.remove('hidden-force');
-      playVictory();
-
-      const gpResultView = document.getElementById('grandPrixResultView');
-      const examResultView = document.getElementById('examResultView');
-
-      if (selectedGameMode === 'grandprix') {
-        // SHOW GRAND PRIX RESULTS
-        if (gpResultView) gpResultView.classList.remove('hidden-force');
-        if (examResultView) examResultView.classList.add('hidden-force');
-
-        const avgTime = answerTimes.length > 0 ? (answerTimes.reduce((a,b)=>a+b, 0) / answerTimes.length / 1000).toFixed(2) : "0.0";
-        const accuracy = totalAnswers > 0 ? Math.round((correctAnswers / totalAnswers) * 100) : 100;
-        
-        document.getElementById('statAvgTime').textContent = `${avgTime}秒`;
-        document.getElementById('statNitros').textContent = `${nitroTriggers}回`;
-        document.getElementById('statAccuracy').textContent = `${accuracy}%`;
-        document.getElementById('statCombo').textContent = `${maxCombo}問`;
-
-        const sorted = [...racers].sort((a,b) => b.dist - a.dist);
-        const finalRank = sorted.findIndex(r => r.isPlayer) + 1;
-        const rankTexts = { 1: "1い ゴール！", 2: "2い ゴール！", 3: "3い ゴール！", 4: "4い" };
-        const rankSub = { 1: "🏆 グランプリ 優勝チャンピオン！", 2: "🥈 準優勝！ 表彰台ゲット！", 3: "🥉 3位入賞！ ナイスラン！", 4: "ざんねん！ もういちどリベンジ！" };
-        const rankTrophy = { 1: "🏆", 2: "🥈", 3: "🥉", 4: "⚠️" };
-        
-        document.getElementById('resultRankText').textContent = rankTexts[finalRank];
-        document.getElementById('resultSubText').textContent = rankSub[finalRank];
-        document.getElementById('resultTrophy').textContent = rankTrophy[finalRank];
-
-        const earnedP = (5 - finalRank) * 400 + (accuracy === 100 ? 300 : 0);
-        const earnedC = finalRank === 1 ? 50 : (finalRank === 2 ? 30 : 15);
-        
-        document.getElementById('earnedPts').textContent = earnedP;
-        document.getElementById('earnedCores').textContent = earnedC;
-        playerPoints += earnedP;
-        playerCores += earnedC;
-        updateInventoryUI();
-
-        const badgeBox = document.getElementById('unlockedBadge');
-        if (parseFloat(avgTime) <= 1.5 && finalRank === 1) {
-          badgeBox.classList.remove('hidden-force');
-          document.getElementById('badgeTitle').textContent = "⚡ 電光石火の暗算レーサー (平均1.5秒以内)";
-        } else if (accuracy === 100) {
-          badgeBox.classList.remove('hidden-force');
-          document.getElementById('badgeTitle').textContent = "🎯 パーフェクト・ドライバー (全問ノーミス)";
-        } else {
-          badgeBox.classList.add('hidden-force');
+    if (state === 'TITLE' || state === 'GAMEOVER') return;
+    
+    // Flashing Logic
+    if (state === 'PLAYING_FLASH') {
+        if (time > lastFlashTime + config.speed) {
+            lastFlashTime = time;
+            if (flashIndex < currentProblem.length) {
+                // Show number
+                const el = document.getElementById('flash-display');
+                el.textContent = currentProblem[flashIndex];
+                // Hide slightly before next to create "flash" effect
+                setTimeout(() => {
+                    if(state === 'PLAYING_FLASH') el.textContent = '';
+                }, config.speed * 0.6);
+                
+                flashIndex++;
+            } else {
+                // Flash done, wait for input
+                state = 'PLAYING_INPUT';
+                currentInput = "";
+                updateInputDisplay();
+                document.getElementById('flash-display').classList.add('hidden');
+                document.getElementById('numpad-section').classList.remove('hidden');
+            }
         }
-
-      } else {
-        // SHOW OFFICIAL CERTIFICATION CERTIFICATE
-        if (gpResultView) gpResultView.classList.add('hidden-force');
-        if (examResultView) examResultView.classList.remove('hidden-force');
-
-        const assoc = ASSOCIATIONS[currentAssocKey];
-        document.getElementById('certAssocName').textContent = assoc.name;
-        
-        const isPassed = (correctAnswers >= 7); // Official Standard: 70%+
-        const score = correctAnswers * 10;
-        document.getElementById('certScoreText').textContent = `10問中 ${correctAnswers}問正解 (${score}点)`;
-
-        const levelTitle = document.getElementById('certLevelTitle');
-        const passText = document.getElementById('certPassText');
-
-        if (isPassed) {
-          levelTitle.textContent = `【 ${activeRule.name} 合格 】`;
-          levelTitle.className = "text-2xl sm:text-3xl font-black text-yellow-400 drop-shadow-[0_0_12px_#eab308]";
-          passText.textContent = "🎉 おめでとうございます！ 合格認定！";
-          passText.className = "text-xs font-black text-emerald-400 mt-0.5";
-        } else {
-          levelTitle.textContent = `【 不合格 (あと${7 - correctAnswers}問) 】`;
-          levelTitle.className = "text-2xl sm:text-3xl font-black text-red-400 drop-shadow-[0_0_12px_#ef4444]";
-          passText.textContent = `おしい！ あと${7 - correctAnswers}問で合格でした。再挑戦しよう！`;
-          passText.className = "text-xs font-black text-pink-400 mt-0.5";
-        }
-
-        playerPoints += correctAnswers * 60;
-        playerCores += isPassed ? 30 : 10;
-        updateInventoryUI();
-      }
-    } else {
-      closeVictory();
     }
-  };
+    
+    // Entity Updates
+    for (let i = enemies.length - 1; i >= 0; i--) {
+        let e = enemies[i];
+        e.update();
+        
+        // Base Damage Check
+        if (e.y > ch) {
+            enemies.splice(i, 1);
+            hp -= 2;
+            updateHUD();
+            // Screen shake or flash red could go here
+            if (hp <= 0) {
+                hp = 0;
+                gameOver();
+            }
+        }
+    }
+    
+    for (let i = allies.length - 1; i >= 0; i--) {
+        let a = allies[i];
+        a.update();
+        if (a.y < -50) allies.splice(i, 1); // Clean up allies that flew off top
+    }
+    
+    for (let i = particles.length - 1; i >= 0; i--) {
+        let p = particles[i];
+        p.update();
+        if (p.life <= 0) particles.splice(i, 1);
+    }
+    
+    // Collision Detection (O(N*M) is okay for JS up to ~1000 objects total)
+    // Only check if we are in battle phase or if allies exist
+    if (allies.length > 0 && enemies.length > 0) {
+        for (let i = enemies.length - 1; i >= 0; i--) {
+            let e = enemies[i];
+            if (e.dead) continue;
+            
+            for (let j = allies.length - 1; j >= 0; j--) {
+                let a = allies[j];
+                if (a.dead) continue;
+                
+                // Fast distance check (AABB roughly, then sq dist)
+                let dx = e.x - a.x;
+                let dy = e.y - a.y;
+                if (Math.abs(dx) < 10 && Math.abs(dy) < 10) {
+                    if (dx*dx + dy*dy < 64) { // radius ~4, combined 8, sq 64
+                        e.dead = true;
+                        a.dead = true;
+                        createExplosion(e.x, (e.y + a.y)/2);
+                        break; // This enemy is dead, move to next enemy
+                    }
+                }
+            }
+        }
+        
+        // Cleanup dead
+        enemies = enemies.filter(e => !e.dead);
+        allies = allies.filter(a => !a.dead);
+    }
+    
+    // Wave Clear Check
+    if (state === 'PLAYING_BATTLE') {
+        if (enemies.length === 0) {
+            // Wave cleared!
+            wave++;
+            updateHUD();
+            startWave();
+        } else if (allies.length === 0 && state === 'PLAYING_BATTLE') {
+            // Out of ammo! Enemies will just walk into base.
+            // (We let the loop continue so player watches them die)
+        }
+    }
+}
 
-  window.closeVictory = () => {
-    victoryScreen.classList.add('hidden-force');
-    lobbyScreen.classList.remove('hidden-force');
-  };
+function draw(ctx) {
+    ctx.clearRect(0, 0, cw, ch);
+    
+    // Draw Grid (Cyberpunk floor)
+    ctx.strokeStyle = 'rgba(59, 130, 246, 0.1)';
+    ctx.lineWidth = 1;
+    const gridSize = 40;
+    const offset = (performance.now() / 20) % gridSize;
+    ctx.beginPath();
+    // Vertical
+    for(let x=0; x<cw; x+=gridSize) {
+        ctx.moveTo(x, 0); ctx.lineTo(x, ch);
+    }
+    // Horizontal moving down
+    for(let y=0; y<ch; y+=gridSize) {
+        ctx.moveTo(0, y + offset); ctx.lineTo(cw, y + offset);
+    }
+    ctx.stroke();
+    
+    // Draw Base Line
+    ctx.strokeStyle = hp > 20 ? 'rgba(16, 185, 129, 0.5)' : 'rgba(239, 68, 68, 0.5)';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(0, ch - 5);
+    ctx.lineTo(cw, ch - 5);
+    ctx.stroke();
+
+    // Draw Entities
+    ctx.globalCompositeOperation = 'lighter';
+    particles.forEach(p => p.draw(ctx));
+    allies.forEach(a => a.draw(ctx));
+    enemies.forEach(e => e.draw(ctx));
+    ctx.globalCompositeOperation = 'source-over';
+}
+
+let lastTime = 0;
+function loop(timestamp) {
+    const dt = timestamp - lastTime;
+    lastTime = timestamp;
+    
+    update(dt, timestamp);
+    draw(ctx);
+    
+    requestAnimationFrame(loop);
+}
+
+// Start Engine
+requestAnimationFrame(loop);
+
 </script>
 </body>
 </html>
