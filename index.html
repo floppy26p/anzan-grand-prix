@@ -136,10 +136,27 @@
     }
 
     /* Mode Selection Cards */
-    .mode-card-active {
-      border-color: #ec4899 !important;
-      background: linear-gradient(135deg, rgba(236, 72, 153, 0.25), rgba(99, 102, 241, 0.25)) !important;
-      box-shadow: 0 0 20px rgba(236, 72, 153, 0.45) !important;
+    .mode-card-active-gp {
+      border: 2px solid #ec4899 !important;
+      background: linear-gradient(135deg, rgba(236, 72, 153, 0.3), rgba(99, 102, 241, 0.25)) !important;
+      box-shadow: 0 0 20px rgba(236, 72, 153, 0.5) !important;
+      opacity: 1 !important;
+    }
+    .mode-card-active-exam {
+      border: 2px solid #06b6d4 !important;
+      background: linear-gradient(135deg, rgba(6, 182, 212, 0.3), rgba(16, 185, 129, 0.25)) !important;
+      box-shadow: 0 0 20px rgba(6, 182, 212, 0.5) !important;
+      opacity: 1 !important;
+    }
+    .mode-card-inactive {
+      border: 1px solid #334155 !important;
+      background: rgba(15, 23, 42, 0.75) !important;
+      box-shadow: none !important;
+      opacity: 0.6 !important;
+    }
+    .mode-card-inactive:hover {
+      opacity: 0.9 !important;
+      border-color: #64748b !important;
     }
 
     /* Numpad */
@@ -200,33 +217,41 @@
     <div class="relative z-10 space-y-2">
       
       <!-- MODE SELECTOR (グランプリ vs けんてい) -->
-      <div class="glass-panel rounded-2xl p-2.5 sm:p-3 border-cyan-400/40 shadow-[0_0_18px_rgba(6,182,212,0.25)]">
-        <div class="text-[10px] text-yellow-300 font-black mb-1.5 flex items-center justify-between">
-          <span class="flex items-center gap-1">🎮 あそぶモードをえらんでね</span>
-          <span id="modeActiveBadge" class="text-[9px] px-2 py-0.5 rounded-full bg-pink-900 text-pink-200 border border-pink-400 font-bold">レース</span>
+      <div class="glass-panel rounded-2xl p-2.5 sm:p-3 border-cyan-400/50 shadow-[0_0_20px_rgba(6,182,212,0.3)]">
+        <div class="text-[11px] text-yellow-300 font-black mb-2 flex items-center justify-between">
+          <span class="flex items-center gap-1.5">
+            <span class="animate-bounce">👉</span>
+            <span>モードをえらんでね</span>
+          </span>
+          <span id="modeActiveBadge" class="text-[9px] px-2 py-0.5 rounded-full bg-pink-900 text-pink-200 border border-pink-400 font-black">🏎️ グランプリ中</span>
         </div>
-        <div class="grid grid-cols-2 gap-1.5">
-          <button id="modeBtnGrandPrix" onclick="selectGameMode('grandprix')" class="p-2 rounded-xl border border-pink-500 mode-card-active text-left active:scale-95 transition-all">
-            <div class="flex items-center gap-1.5">
+        <div class="grid grid-cols-2 gap-2">
+          <!-- Button 1: Grand Prix -->
+          <button id="modeBtnGrandPrix" onclick="selectGameMode('grandprix')" class="p-2.5 rounded-xl mode-card-active-gp text-left active:scale-95 transition-all cursor-pointer">
+            <div class="flex items-start justify-between">
               <span class="text-2xl">🏎️</span>
-              <div>
-                <div class="text-xs sm:text-sm font-black text-white">グランプリ</div>
-                <div class="text-[8px] sm:text-[9px] text-pink-300 font-bold">レース & ❓アイテム</div>
-              </div>
+              <span id="modeStatusGp" class="text-[9px] px-1.5 py-0.5 rounded-full font-black bg-pink-600 text-white shadow-[0_0_8px_#ec4899]">● えらび中</span>
+            </div>
+            <div class="mt-1">
+              <div class="text-xs sm:text-sm font-black text-white">グランプリ</div>
+              <div class="text-[9px] text-pink-300 font-bold leading-tight">レース & ❓アイテム</div>
             </div>
           </button>
-          <button id="modeBtnExam" onclick="selectGameMode('exam')" class="p-2 rounded-xl border border-slate-700 bg-slate-900/80 text-left active:scale-95 transition-all opacity-70 hover:opacity-100">
-            <div class="flex items-center gap-1.5">
+          <!-- Button 2: Certification Exam -->
+          <button id="modeBtnExam" onclick="selectGameMode('exam')" class="p-2.5 rounded-xl mode-card-inactive text-left active:scale-95 transition-all cursor-pointer">
+            <div class="flex items-start justify-between">
               <span class="text-2xl">📝</span>
-              <div>
-                <div class="text-xs sm:text-sm font-black text-white">けんてい</div>
-                <div class="text-[8px] sm:text-[9px] text-cyan-300 font-bold">コースなし 10問しけん</div>
-              </div>
+              <span id="modeStatusExam" class="text-[9px] px-1.5 py-0.5 rounded-full font-bold bg-slate-800 text-slate-400">タップで選択</span>
+            </div>
+            <div class="mt-1">
+              <div class="text-xs sm:text-sm font-black text-white">けんてい</div>
+              <div class="text-[9px] text-cyan-300 font-bold leading-tight">コースなし 10問テスト</div>
             </div>
           </button>
         </div>
-        <div id="modeDescText" class="text-[9px] text-slate-300 mt-1.5 bg-slate-950/70 p-1.5 rounded-lg border border-slate-700/60 leading-tight">
-          🏎️ コースを左右に運転して❓キューブをキャッチ！暗算正解で超加速ブースト！
+        <div id="modeDescText" class="text-[10px] text-slate-200 mt-2 bg-slate-950/80 p-2 rounded-xl border border-slate-700/60 leading-normal flex items-center gap-1.5">
+          <span>🏎️</span>
+          <span>コースを左右に運転して❓キューブをキャッチ！暗算正解で超加速ブースト！</span>
         </div>
       </div>
 
@@ -910,28 +935,52 @@
     selectedGameMode = mode;
     const btnGp = document.getElementById('modeBtnGrandPrix');
     const btnEx = document.getElementById('modeBtnExam');
+    const statusGp = document.getElementById('modeStatusGp');
+    const statusExam = document.getElementById('modeStatusExam');
     const badge = document.getElementById('modeActiveBadge');
     const desc = document.getElementById('modeDescText');
     const startBtn = document.getElementById('startBtnMain');
     
     if (mode === 'grandprix') {
-      if (btnGp) btnGp.className = 'p-2 rounded-xl border border-pink-500 mode-card-active text-left active:scale-95 transition-all';
-      if (btnEx) btnEx.className = 'p-2 rounded-xl border border-slate-700 bg-slate-900/80 text-left active:scale-95 transition-all opacity-70 hover:opacity-100';
-      if (badge) {
-        badge.textContent = 'レース';
-        badge.className = 'text-[9px] px-2 py-0.5 rounded-full bg-pink-900 text-pink-200 border border-pink-400 font-bold';
+      if (btnGp) btnGp.className = 'p-2.5 rounded-xl mode-card-active-gp text-left active:scale-95 transition-all cursor-pointer';
+      if (btnEx) btnEx.className = 'p-2.5 rounded-xl mode-card-inactive text-left active:scale-95 transition-all cursor-pointer';
+      if (statusGp) {
+        statusGp.textContent = '● えらび中';
+        statusGp.className = 'text-[9px] px-1.5 py-0.5 rounded-full font-black bg-pink-600 text-white shadow-[0_0_8px_#ec4899]';
       }
-      if (desc) desc.textContent = '🏎️ コースを左右に運転して❓キューブをキャッチ！暗算正解で超加速ブースト！';
-      if (startBtn) startBtn.innerHTML = '🏎️ レーススタート！ (3周勝負)';
+      if (statusExam) {
+        statusExam.textContent = 'タップで選択';
+        statusExam.className = 'text-[9px] px-1.5 py-0.5 rounded-full font-bold bg-slate-800 text-slate-400';
+      }
+      if (badge) {
+        badge.textContent = '🏎️ グランプリ中';
+        badge.className = 'text-[9px] px-2 py-0.5 rounded-full bg-pink-900 text-pink-200 border border-pink-400 font-black';
+      }
+      if (desc) desc.innerHTML = '<span>🏎️</span><span>コースを左右に運転して❓キューブをキャッチ！暗算正解で超加速ブースト！</span>';
+      if (startBtn) {
+        startBtn.innerHTML = '🏎️ レーススタート！ (3周勝負)';
+        startBtn.className = 'w-full btn-neon text-white font-black rounded-2xl py-3 px-4 flex items-center justify-center gap-2 text-lg sm:text-xl shadow-[0_0_30px_rgba(236,72,153,0.8)] animate-pulse border-pink-400 bg-gradient-to-r from-pink-500 to-purple-600';
+      }
     } else {
-      if (btnEx) btnEx.className = 'p-2 rounded-xl border border-cyan-400 mode-card-active text-left active:scale-95 transition-all';
-      if (btnGp) btnGp.className = 'p-2 rounded-xl border border-slate-700 bg-slate-900/80 text-left active:scale-95 transition-all opacity-70 hover:opacity-100';
-      if (badge) {
-        badge.textContent = 'けんてい';
-        badge.className = 'text-[9px] px-2 py-0.5 rounded-full bg-cyan-900 text-cyan-200 border border-cyan-400 font-bold';
+      if (btnEx) btnEx.className = 'p-2.5 rounded-xl mode-card-active-exam text-left active:scale-95 transition-all cursor-pointer';
+      if (btnGp) btnGp.className = 'p-2.5 rounded-xl mode-card-inactive text-left active:scale-95 transition-all cursor-pointer';
+      if (statusExam) {
+        statusExam.textContent = '● えらび中';
+        statusExam.className = 'text-[9px] px-1.5 py-0.5 rounded-full font-black bg-cyan-600 text-white shadow-[0_0_8px_#06b6d4]';
       }
-      if (desc) desc.textContent = '📝 コースなしで集中！公式ルールの10問を連続で解いて合格しょうじょうをもらおう！';
-      if (startBtn) startBtn.innerHTML = '📝 けんていスタート！ (全10問)';
+      if (statusGp) {
+        statusGp.textContent = 'タップで選択';
+        statusGp.className = 'text-[9px] px-1.5 py-0.5 rounded-full font-bold bg-slate-800 text-slate-400';
+      }
+      if (badge) {
+        badge.textContent = '📝 けんてい中';
+        badge.className = 'text-[9px] px-2 py-0.5 rounded-full bg-cyan-900 text-cyan-200 border border-cyan-400 font-black';
+      }
+      if (desc) desc.innerHTML = '<span>📝</span><span>コースなしで集中！公式ルールの10問を連続で解いて合格認定証をもらおう！</span>';
+      if (startBtn) {
+        startBtn.innerHTML = '📝 けんていスタート！ (全10問)';
+        startBtn.className = 'w-full btn-neon text-white font-black rounded-2xl py-3 px-4 flex items-center justify-center gap-2 text-lg sm:text-xl shadow-[0_0_30px_rgba(6,182,212,0.8)] animate-pulse border-cyan-400 bg-gradient-to-r from-cyan-500 to-emerald-600';
+      }
     }
     playTap();
   };
